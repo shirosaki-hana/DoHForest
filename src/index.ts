@@ -5,7 +5,9 @@ import { env } from './config/env.js';
 import { fastifyConfig, staticFilesConfig } from './config/server.js';
 import { errorHandler } from './handlers/errorHandler.js';
 import { notFoundHandler } from './handlers/notFoundHandler.js';
-import { logger } from './utils/log.js';
+import { logger, console_error } from './logger/index.js';
+import { initializeDatabase, disconnectDatabase } from './database/index.js';
+import { initializeLogger } from './logger/logs.js';
 //------------------------------------------------------------------------------//
 
 // Fastify 서버 생성
@@ -20,9 +22,11 @@ async function createFastifyApp() {
 
 // 서버 시작 함수
 async function startServer(host: string, port: number) {
+  await initializeDatabase();
+  await initializeLogger();
   const fastify = await createFastifyApp();
   await fastify.listen({ port, host: host }); // 5. 서버 리스닝 시작
-  logger.info('Server started successfully', {
+  logger.info('server', 'Server started successfully', {
     host,
     port,
     url: `http://${host}:${port}`,
@@ -43,13 +47,14 @@ async function gracefulShutdown(
     return;
   }
   isShuttingDown = true;
-  logger.info(`Graceful shutdown initiated (signal: ${signal})`);
+  logger.info('server', `Graceful shutdown initiated (signal: ${signal})`);
   try {
     await fastify.close();
-    logger.info('Graceful shutdown completed');
+    disconnectDatabase();
+    logger.info('server', 'Graceful shutdown completed');
     process.exitCode = 0;
   } catch (error) {
-    logger.error('Graceful shutdown failed', error);
+    logger.error('server', 'Graceful shutdown failed', error);
     process.exitCode = 1;
   }
 }
@@ -59,13 +64,13 @@ async function main() {
   try {
     const fastify = await startServer(env.HOST, env.PORT);
     process.on('SIGINT', () =>
-      gracefulShutdown(fastify, 'SIGINT').catch(logger.error)
+      gracefulShutdown(fastify, 'SIGINT').catch(console_error)
     );
     process.on('SIGTERM', () =>
-      gracefulShutdown(fastify, 'SIGTERM').catch(logger.error)
+      gracefulShutdown(fastify, 'SIGTERM').catch(console_error)
     );
   } catch (error) {
-    logger.error(error);
+    console_error(error);
     process.exitCode = 1;
   }
 }

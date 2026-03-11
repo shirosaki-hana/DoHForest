@@ -1,6 +1,6 @@
 import type { LogLevel, LogCategory } from './types.js';
-
 //------------------------------------------------------------------------------//
+
 // 로그 큐 시스템 (DB 준비 전 로그 버퍼링)
 interface QueuedLog {
   level: LogLevel;
@@ -53,7 +53,6 @@ export const initializeLogDb = async (
   }
 };
 
-//------------------------------------------------------------------------------//
 // 메인 로그 함수
 
 const log = (
@@ -73,9 +72,7 @@ const log = (
   }
 };
 
-//------------------------------------------------------------------------------//
 // Logger 인터페이스
-
 export const logger = {
   error: (category: LogCategory, message: string, meta?: unknown) =>
     log('ERROR', category, message, meta),
@@ -87,9 +84,7 @@ export const logger = {
     log('DEBUG', category, message, meta),
 };
 
-//------------------------------------------------------------------------------//
 // 콘솔 로그 유틸 (비상용 - ESLint no-console 규칙 우회)
-
 /* eslint-disable no-console */
 export const console_log = (...args: unknown[]): void => {
   console.log(...args);

@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { execRawSql, queryRawSql, withTransaction } from './connection.js';
 import { projectRoot } from '../utils/dir.js';
-import { logger } from '../utils/log.js';
+import { logger } from '../logger/index.js';
 //------------------------------------------------------------------------------//
 
 /**

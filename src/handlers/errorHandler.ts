@@ -1,5 +1,5 @@
 import type { FastifyError, FastifyRequest, FastifyReply } from 'fastify';
-import { logger } from '../utils/log.js';
+import { logger } from '../logger/index.js';
 
 /**
  * 전역 에러 핸들러
@@ -9,7 +9,7 @@ export async function errorHandler(
   request: FastifyRequest,
   reply: FastifyReply
 ) {
-  logger.error('Unhandled error:', error);
+  logger.error('server', 'Unhandled error:', error);
   const statusCode = error.statusCode || 500;
   return reply.code(statusCode).send({ error: error.stack });
 }

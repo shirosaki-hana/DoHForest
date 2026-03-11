@@ -1,13 +1,14 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+
 import { DatabaseSync } from 'node:sqlite';
 import { drizzle } from 'drizzle-orm/sqlite-proxy';
 import { env } from '../config/env.js';
-import { logger } from '../utils/log.js';
+import { logger, console_log, console_warn } from '../logger/index.js';
+
 import * as schema from './schema.js';
 //------------------------------------------------------------------------------//
 
-// DATA_PATH에서 파생된 DB 경로 사용
 export const dbPath = env.DB_PATH;
 
 // 경로 정보 로깅

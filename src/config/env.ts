@@ -39,7 +39,7 @@ const envSchema = z.object({
   HOST: z.string().default('127.0.0.1'),
   PORT: z.coerce.number().min(1).max(65535).default(4001),
   REQUEST_BODY_LIMIT: mbToBytes('10mb'),
-  DB_PATH: z.string().default('../data/dohforest.db'),
+  DB_PATH: z.string().default('./data/dohforest.db'),
 });
 
 // 환경변수 파싱

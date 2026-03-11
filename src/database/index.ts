@@ -1,4 +1,4 @@
-import { logger } from '../utils/log.js';
+import { logger } from '../logger/index.js';
 import {
   db,
   checkDatabaseConnection as checkConnection,

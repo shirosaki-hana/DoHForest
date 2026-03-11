@@ -12,8 +12,8 @@ import {
 import type { Database } from '../connection.js';
 import { logs } from '../schema.js';
 import {
-  LogLevelSchema,
-  LogCategorySchema,
+  LOG_LEVELS,
+  LOG_CATEGORIES,
   type LogLevel,
   type LogCategory,
   type GetLogsRequest,
@@ -185,9 +185,8 @@ export class LogRepository {
       .where(gte(logs.createdAt, oneWeekAgo));
     const last7d = last7dResult?.count ?? 0;
 
-    // Zod 스키마에서 enum 값 추출 (하드코딩 방지)
-    const ALL_LEVELS = LogLevelSchema.options;
-    const ALL_CATEGORIES = LogCategorySchema.options;
+    const ALL_LEVELS = LOG_LEVELS;
+    const ALL_CATEGORIES = LOG_CATEGORIES;
 
     const byLevel: Record<string, number> = {};
     for (const lvl of ALL_LEVELS) {

@@ -6,8 +6,8 @@ import type {
   GetLogsRequest,
   LogSettings,
 } from './types.js';
-
 //------------------------------------------------------------------------------//
+
 // 로그 DB 저장 함수 (timestamp 지원)
 const saveLogToDb = async (
   level: LogLevel,
@@ -24,19 +24,16 @@ export const initializeLogger = async (): Promise<void> => {
   await initializeLogDb(saveLogToDb);
 };
 
-//------------------------------------------------------------------------------//
 // 로그 조회
 export const getLogs = async (params: GetLogsRequest) => {
   return database.logs.findMany(params);
 };
 
-//------------------------------------------------------------------------------//
 // 로그 통계
 export const getLogStats = async () => {
   return database.logs.getStats();
 };
 
-//------------------------------------------------------------------------------//
 // 로그 삭제
 export const deleteLogs = async (params: {
   ids?: number[];
@@ -54,7 +51,6 @@ export const deleteLogs = async (params: {
   return database.logs.deleteByCondition({ olderThan, level });
 };
 
-//------------------------------------------------------------------------------//
 // 오래된 로그 자동 정리
 export const cleanupOldLogs = async (
   settings: LogSettings
