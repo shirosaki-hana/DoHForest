@@ -1,45 +1,32 @@
 import dotenv from 'dotenv';
 import { z } from 'zod';
-// import ms from 'ms';
 import path from 'path';
 import { projectRoot } from '../config/dir.js';
 //------------------------------------------------------------------------------//
 
 dotenv.config({ path: path.resolve(projectRoot, '.env'), quiet: true });
-
-// ms 라이브러리 형식의 시간 문자열을 검증하는 Zod 스키마
-/* 나중에 쓰면 유용할 듯
-const msStringSchema = z
-  .string()
-  .refine(
-    val => {
-      try {
-        const result = ms(val as ms.StringValue);
-        return typeof result === 'number' && !isNaN(result);
-      } catch {
-        return false;
-      }
-    },
-    { message: 'Invalid time format (e.g., "24h", "10s", "7d")' }
-  )
-  .transform(val => val as ms.StringValue);
-*/
-// MB 단위 문자열을 바이트로 변환하는 Zod 스키마 팩토리
-const mbToBytes = (defaultMb: string) =>
-  z
-    .string()
-    .default(defaultMb)
-    .refine((val) => /^\d+mb$/i.test(val), {
-      message: 'Invalid size format (e.g., "10mb", "50mb")',
-    })
-    .transform((val) => parseInt(val.replace(/mb$/i, ''), 10) * 1024 * 1024);
-
 // 환경 변수 Zod 스키마
 const envSchema = z.object({
-  HOST: z.string().default('127.0.0.1'),
-  PORT: z.coerce.number().min(1).max(65535).default(4001),
-  REQUEST_BODY_LIMIT: mbToBytes('10mb'),
+  WEBUI_HOST: z.string().default('127.0.0.1'),
+  WEBUI_PORT: z.coerce.number().min(1).max(65535).default(4001),
   DB_PATH: z.string().default('./data/dohforest.db'),
+
+  // DNS 리스너
+  DNS_HOST: z.string().default('127.0.0.1'),
+  DNS_PORT: z.coerce.number().min(1).max(65535).default(5353),
+
+  // DoH 업스트림
+  DOH_PRIMARY: z.url().default('https://cloudflare-dns.com/dns-query'),
+  DOH_SECONDARY: z.url().default('https://dns.google/dns-query'),
+  DOH_TIMEOUT: z.coerce.number().min(500).max(30000).default(5000),
+
+  // DNS 캐시
+  CACHE_ENABLED: z
+    .enum(['true', 'false'])
+    .default('true')
+    .transform((v) => v === 'true'),
+  CACHE_MIN_TTL: z.coerce.number().min(0).default(60),
+  CACHE_MAX_TTL: z.coerce.number().min(0).default(86400),
 });
 
 // 환경변수 파싱

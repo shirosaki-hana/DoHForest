@@ -7,6 +7,7 @@ export const LOG_CATEGORIES = [
   'system',
   'database',
   'server',
+  'dns',
 ] as const;
 export type LogCategory = (typeof LOG_CATEGORIES)[number];
 

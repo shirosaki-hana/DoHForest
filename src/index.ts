@@ -6,17 +6,18 @@ import { fastifyConfig, staticFilesConfig } from './config/server.js';
 import { errorHandler } from './handlers/errorHandler.js';
 import { notFoundHandler } from './handlers/notFoundHandler.js';
 import { logger, console_error, console_log } from './logger/index.js';
-import { initializeDatabase, disconnectDatabase } from './database/index.js';
+import { initializeDatabase } from './database/index.js';
+import { disconnectDatabase } from './database/connection.js';
 import { initializeLogger } from './logger/logs.js';
+import { startDnsServer, stopDnsServer } from './dns/server.js';
 //------------------------------------------------------------------------------//
 
 // Fastify 서버 생성
 async function createFastifyApp() {
   const fastify = Fastify(fastifyConfig);
-  await fastify.register(staticFiles, staticFilesConfig); // 정적 파일 서빙
-  //핸들러 등록
-  fastify.setNotFoundHandler(notFoundHandler); // SPA fallback 및 404 핸들러
-  fastify.setErrorHandler(errorHandler); // 전역 에러 핸들러
+  await fastify.register(staticFiles, staticFilesConfig);
+  fastify.setNotFoundHandler(notFoundHandler);
+  fastify.setErrorHandler(errorHandler);
   return fastify;
 }
 
@@ -24,8 +25,9 @@ async function createFastifyApp() {
 async function startServer(host: string, port: number) {
   await initializeDatabase();
   await initializeLogger();
+
   const fastify = await createFastifyApp();
-  await fastify.listen({ port, host: host }); // 5. 서버 리스닝 시작
+  await fastify.listen({ port, host });
   logger.info('server', 'Server started successfully', {
     host,
     port,
@@ -33,13 +35,14 @@ async function startServer(host: string, port: number) {
     staticConfig: staticFilesConfig,
   });
   console_log(`[server] Server is running on http://${host}:${port}`);
+
+  await startDnsServer();
+
   return fastify;
 }
 
-// Graceful shutdown 상태 플래그 (중복 호출 방지)
 let isShuttingDown = false;
 
-// Graceful shutdown 핸들러
 async function gracefulShutdown(
   fastify: Awaited<ReturnType<typeof createFastifyApp>>,
   signal: string
@@ -48,22 +51,22 @@ async function gracefulShutdown(
     return;
   }
   isShuttingDown = true;
-  logger.info('server', `Graceful shutdown initiated (signal: ${signal})`);
+  console_log(`[server] Graceful shutdown initiated (signal: ${signal})`);
   try {
+    await stopDnsServer();
     await fastify.close();
     disconnectDatabase();
-    logger.info('server', 'Graceful shutdown completed');
+    console_log('[server] Graceful shutdown completed');
     process.exitCode = 0;
   } catch (error) {
-    logger.error('server', 'Graceful shutdown failed', error);
+    console_error('[server] Graceful shutdown failed', error);
     process.exitCode = 1;
   }
 }
 
-// 메인 엔트리 포인트
 async function main() {
   try {
-    const fastify = await startServer(env.HOST, env.PORT);
+    const fastify = await startServer(env.WEBUI_HOST, env.WEBUI_PORT);
     process.on('SIGINT', () =>
       gracefulShutdown(fastify, 'SIGINT').catch(console_error)
     );
@@ -76,5 +79,4 @@ async function main() {
   }
 }
 
-// 서버 시작
 main();

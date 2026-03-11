@@ -1,13 +1,12 @@
 import { logger } from '../logger/index.js';
 import {
   db,
-  checkDatabaseConnection as checkConnection,
-  disconnectDatabase as disconnect,
-  isDatabaseConnected as isConnected,
+  checkDatabaseConnection,
   ensureDbDirectory,
 } from './connection.js';
 import { runMigrations } from './migrations.js';
 import { LogRepository } from './repositories/log.js';
+import { DnsCacheRepository } from './repositories/dnsCache.js';
 //------------------------------------------------------------------------------//
 
 /**
@@ -16,8 +15,10 @@ import { LogRepository } from './repositories/log.js';
  */
 class Database {
   readonly logs: LogRepository;
+  readonly dnsCache: DnsCacheRepository;
   constructor() {
     this.logs = new LogRepository(db);
+    this.dnsCache = new DnsCacheRepository(db);
   }
 }
 
@@ -32,7 +33,7 @@ export async function initializeDatabase(): Promise<void> {
 
   try {
     await ensureDbDirectory(); // 1. 디렉토리 생성 (비동기)
-    checkConnection(); // 2. 연결 테스트
+    checkDatabaseConnection(); // 2. 연결 테스트
     const { applied, current } = await runMigrations(); // 3. 마이그레이션 실행
     if (applied > 0) {
       logger.info(
@@ -55,21 +56,6 @@ export async function initializeDatabase(): Promise<void> {
     });
     throw error;
   }
-}
-
-/**
- * 데이터베이스 연결 해제
- */
-export function disconnectDatabase(): void {
-  disconnect();
-  logger.info('database', 'Database connection closed successfully');
-}
-
-/**
- * 데이터베이스 연결 여부 확인 (헬스체크용)
- */
-export function isDatabaseConnected(): boolean {
-  return isConnected();
 }
 
 // Re-export for direct access if needed
