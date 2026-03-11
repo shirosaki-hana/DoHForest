@@ -1,0 +1,47 @@
+{
+  "name": "DoHForest",
+  "private": true,
+  "type": "module",
+  "version": "1.0.0",
+  "description": "An astonishingly lightweight DoH client",
+  "main": "index.js",
+  "keywords": [
+    "DoH",
+    "DNS"
+  ],
+  "author": "shirosaki-hana",
+  "license": "MIT",
+  "scripts": {
+    "start": "node dist/index.js",
+    "dev": "nodemon src/index.ts",
+    "typecheck": "tsgo --noEmit --pretty",
+    "build": "pnpm clean && pnpm run typecheck && node ./esbuild.config.mjs",
+    "lint": "eslint .",
+    "clean": "rimraf dist",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "dependencies": {
+    "@fastify/static": "^9.0.0",
+    "ansi-colors": "^4.1.3",
+    "dotenv": "^17.3.1",
+    "drizzle-orm": "^0.45.1",
+    "esbuild": "^0.27.3",
+    "fastify": "^5.8.2",
+    "ms": "^2.1.3",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/ms": "^2.1.0",
+    "@types/node": "^25.4.0",
+    "@typescript/native-preview": "7.0.0-dev.20260310.1",
+    "eslint": "^10.0.3",
+    "globals": "^17.4.0",
+    "nodemon": "^3.1.14",
+    "prettier": "^3.8.1",
+    "rimraf": "^6.1.3",
+    "tsx": "^4.21.0",
+    "typescript-eslint": "^8.57.0"
+  }
+}

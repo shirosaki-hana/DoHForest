@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>File Upload</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <h1>File Upload</h1>
+
+    <div id="uploadArea">
+      <p>Click or drag files here to upload</p>
+      <p><small>All file types supported</small></p>
+    </div>
+
+    <input type="file" id="fileInput" multiple />
+
+    <div id="fileInfo">
+      <p id="fileName"></p>
+      <p id="fileSize"></p>
+    </div>
+
+    <button id="uploadBtn">Upload</button>
+
+    <div id="progressBar">
+      <div id="progressFill"></div>
+    </div>
+
+    <div id="message"></div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
