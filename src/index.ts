@@ -5,6 +5,7 @@ import { env } from './config/env.js';
 import { fastifyConfig, staticFilesConfig } from './config/server.js';
 import { errorHandler } from './handlers/errorHandler.js';
 import { notFoundHandler } from './handlers/notFoundHandler.js';
+import { registerApiRoutes } from './api/index.js';
 import { logger, console_error, console_log } from './logger/index.js';
 import { initializeDatabase } from './database/index.js';
 import { disconnectDatabase } from './database/connection.js';
@@ -16,6 +17,7 @@ import { startDnsServer, stopDnsServer } from './dns/server.js';
 async function createFastifyApp() {
   const fastify = Fastify(fastifyConfig);
   await fastify.register(staticFiles, staticFilesConfig);
+  await registerApiRoutes(fastify);
   fastify.setNotFoundHandler(notFoundHandler);
   fastify.setErrorHandler(errorHandler);
   return fastify;
