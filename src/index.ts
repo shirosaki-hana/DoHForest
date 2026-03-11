@@ -5,7 +5,7 @@ import { env } from './config/env.js';
 import { fastifyConfig, staticFilesConfig } from './config/server.js';
 import { errorHandler } from './handlers/errorHandler.js';
 import { notFoundHandler } from './handlers/notFoundHandler.js';
-import { logger, console_error } from './logger/index.js';
+import { logger, console_error, console_log } from './logger/index.js';
 import { initializeDatabase, disconnectDatabase } from './database/index.js';
 import { initializeLogger } from './logger/logs.js';
 //------------------------------------------------------------------------------//
@@ -32,6 +32,7 @@ async function startServer(host: string, port: number) {
     url: `http://${host}:${port}`,
     staticConfig: staticFilesConfig,
   });
+  console_log(`[server] Server is running on http://${host}:${port}`);
   return fastify;
 }
 

@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 import { z } from 'zod';
 // import ms from 'ms';
 import path from 'path';
-import { projectRoot } from '../utils/dir.js';
+import { projectRoot } from '../config/dir.js';
 //------------------------------------------------------------------------------//
 
 dotenv.config({ path: path.resolve(projectRoot, '.env'), quiet: true });
