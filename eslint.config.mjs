@@ -35,7 +35,7 @@ export default defineConfig([
   },
   // Frontend JavaScript configuration
   {
-    files: ['pages/**/*.js'],
+    files: ['webui/**/*.js'],
     languageOptions: {
       ecmaVersion: 2024,
       sourceType: 'module',
