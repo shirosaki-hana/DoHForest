@@ -41,7 +41,7 @@ export function startScheduler(): void {
       async () => {
         const purged = await purgeExpiredCache();
         if (purged > 0) {
-          logger.debug(
+          logger.info(
             'system',
             `Scheduler: purged ${purged} expired cache entries`
           );

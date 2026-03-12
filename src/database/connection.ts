@@ -12,12 +12,6 @@ import * as schema from './schema.js';
 
 export const dbPath = env.DB_PATH;
 
-// 경로 정보 로깅
-logger.debug('database', 'Database path resolved', {
-  dataPath: env.DB_PATH,
-  dbPath,
-});
-
 // node:sqlite 인스턴스 (동기식)
 let sqliteDb: DatabaseSync | null = null;
 let dbDirectoryReady = false;
@@ -55,8 +49,6 @@ export async function ensureDbDirectory(): Promise<void> {
  */
 function getSqliteDb(): DatabaseSync {
   if (!sqliteDb) {
-    logger.debug('database', 'Initializing SQLite connection', { dbPath });
-
     // DB 파일이 없으면 자동 생성됨 (node:sqlite 기본 동작)
     sqliteDb = new DatabaseSync(dbPath);
 

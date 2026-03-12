@@ -85,8 +85,10 @@ export class DnsCacheRepository {
   async purgeExpired(): Promise<number> {
     const now = Date.now();
     await this.db.delete(dnsCache).where(lte(dnsCache.expiresAt, now));
-    return queryRawSql<{ changes: number }>('SELECT changes() as changes')
-      ?.changes ?? 0;
+    return (
+      queryRawSql<{ changes: number }>('SELECT changes() as changes')
+        ?.changes ?? 0
+    );
   }
 
   /**
@@ -94,8 +96,10 @@ export class DnsCacheRepository {
    */
   async flush(): Promise<number> {
     await this.db.delete(dnsCache);
-    return queryRawSql<{ changes: number }>('SELECT changes() as changes')
-      ?.changes ?? 0;
+    return (
+      queryRawSql<{ changes: number }>('SELECT changes() as changes')
+        ?.changes ?? 0
+    );
   }
 
   /**

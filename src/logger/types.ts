@@ -1,14 +1,7 @@
 export const LOG_LEVELS = ['ERROR', 'WARN', 'INFO', 'DEBUG'] as const;
 export type LogLevel = (typeof LOG_LEVELS)[number];
 
-export const LOG_CATEGORIES = [
-  'api',
-  'auth',
-  'system',
-  'database',
-  'webui',
-  'dns',
-] as const;
+export const LOG_CATEGORIES = ['system', 'database', 'webui', 'dns'] as const;
 export type LogCategory = (typeof LOG_CATEGORIES)[number];
 
 export type SaveLogFn = (

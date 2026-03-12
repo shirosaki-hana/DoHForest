@@ -29,8 +29,6 @@ export const database = new Database();
  * 데이터베이스 초기화 (디렉토리 생성 + 연결 확인 + 마이그레이션)
  */
 export async function initializeDatabase(): Promise<void> {
-  logger.info('database', 'Database initialization started');
-
   try {
     await ensureDbDirectory(); // 1. 디렉토리 생성 (비동기)
     checkDatabaseConnection(); // 2. 연결 테스트

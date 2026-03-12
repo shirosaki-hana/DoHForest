@@ -15,8 +15,8 @@ export const logs = sqliteTable(
   'logs',
   {
     id: integer('id').primaryKey({ autoIncrement: true }),
-    level: text('level').notNull(), // ERROR, WARN, INFO, DEBUG
-    category: text('category').notNull(), // api, auth, system, database, server
+    level: text('level').notNull(),
+    category: text('category').notNull(),
     message: text('message').notNull(),
     meta: text('meta'), // JSON 형태의 추가 데이터
     createdAt: integer('created_at', { mode: 'timestamp_ms' })

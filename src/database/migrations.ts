@@ -76,10 +76,6 @@ async function loadMigrations(): Promise<Migration[]> {
  * 마이그레이션 테이블 생성
  */
 function ensureMigrationTable(): void {
-  logger.debug('database', 'Ensuring migration table exists', {
-    tableName: '_migrations',
-  });
-
   execRawSql(`
     CREATE TABLE IF NOT EXISTS _migrations (
       version INTEGER PRIMARY KEY,
