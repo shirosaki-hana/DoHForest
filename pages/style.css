@@ -271,6 +271,156 @@ select:focus {
   background: #f9fafb;
 }
 
+/* ── Cache ──────────────────────────────────────────── */
+
+.cache-config-bar {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 10px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.cache-config-bar:empty {
+  display: none;
+}
+
+.cache-config-bar strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.cache-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.flush-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.flush-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-dim);
+  margin-right: 2px;
+}
+
+.btn.danger {
+  background: var(--red);
+  color: #fff;
+  border-color: var(--red);
+}
+
+.btn.danger:hover:not(:disabled) {
+  background: #dc2626;
+  border-color: #dc2626;
+}
+
+.cache-toolbar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.cache-toolbar input[type='search'] {
+  flex: 1;
+  min-width: 160px;
+  height: 34px;
+  font-size: 13px;
+}
+
+.cache-toolbar select {
+  height: 34px;
+  font-size: 13px;
+}
+
+.cache-table-wrap {
+  overflow-x: auto;
+  margin-bottom: 12px;
+}
+
+#cacheTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+#cacheTable th {
+  text-align: left;
+  padding: 10px 12px;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+
+#cacheTable td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+  word-break: break-all;
+}
+
+#cacheTable tbody tr:last-child td {
+  border-bottom: none;
+}
+
+#cacheTable tbody tr:hover {
+  background: #f9fafb;
+}
+
+#cacheTable .col-type {
+  width: 60px;
+}
+
+#cacheTable .col-ttl {
+  width: 60px;
+  text-align: right;
+}
+
+#cacheTable .col-upstream {
+  width: 120px;
+}
+
+#cacheTable .col-expires {
+  width: 160px;
+  white-space: nowrap;
+}
+
+#cacheTable .col-status {
+  width: 80px;
+}
+
+.badge.active {
+  background: #f0fdf4;
+  color: #16a34a;
+}
+
+.badge.expired {
+  background: #fef2f2;
+  color: var(--red);
+}
+
 /* ── Log Monitor ────────────────────────────────────── */
 
 .stats-bar {
@@ -475,5 +625,15 @@ select:focus {
 
   .stats-bar {
     flex-direction: column;
+  }
+
+  .cache-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .cache-toolbar {
+    flex-direction: column;
+    align-items: stretch;
   }
 }

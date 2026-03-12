@@ -11,6 +11,7 @@
       <h1>DoH Forest</h1>
       <nav>
         <button class="tab active" data-tab="dns">DNS Lookup</button>
+        <button class="tab" data-tab="cache">Cache</button>
         <button class="tab" data-tab="logs">Log Monitor</button>
       </nav>
     </header>
@@ -60,6 +61,59 @@
             </thead>
             <tbody></tbody>
           </table>
+        </div>
+      </section>
+
+      <!-- Cache -->
+      <section id="cache" class="panel">
+        <div id="cacheStats" class="stats-bar"></div>
+
+        <div class="cache-config-bar" id="cacheConfig"></div>
+
+        <div class="cache-actions">
+          <div class="flush-group">
+            <span class="flush-label">Flush</span>
+            <button class="btn small danger" id="flushAll">All</button>
+            <button class="btn small" id="flushL1">L1 (Memory)</button>
+            <button class="btn small" id="flushL2">L2 (DB)</button>
+          </div>
+          <button class="btn small" id="cacheRefresh">Refresh</button>
+        </div>
+
+        <div class="cache-toolbar">
+          <input
+            type="search"
+            id="cacheSearch"
+            placeholder="Search domain..."
+            autocomplete="off"
+          />
+          <select id="cacheStatus">
+            <option value="all">All Status</option>
+            <option value="active">Active</option>
+            <option value="expired">Expired</option>
+          </select>
+        </div>
+
+        <div class="cache-table-wrap">
+          <table id="cacheTable">
+            <thead>
+              <tr>
+                <th>Domain</th>
+                <th class="col-type">Type</th>
+                <th class="col-ttl">TTL</th>
+                <th class="col-upstream">Upstream</th>
+                <th class="col-expires">Expires</th>
+                <th class="col-status">Status</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div class="pagination">
+          <button class="btn small" id="cachePrev" disabled>&larr; Prev</button>
+          <span id="cachePageInfo">-</span>
+          <button class="btn small" id="cacheNext" disabled>Next &rarr;</button>
         </div>
       </section>
 

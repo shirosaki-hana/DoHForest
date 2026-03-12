@@ -1,6 +1,7 @@
 // ─── State ────────────────────────────────────────────────────────────────────
 
 let logsInitialised = false;
+let cacheInitialised = false;
 
 // ─── Tab Navigation ───────────────────────────────────────────────────────────
 
@@ -15,6 +16,9 @@ document.querySelectorAll('.tab').forEach((btn) => {
     btn.classList.add('active');
     document.getElementById(btn.dataset.tab).classList.add('active');
 
+    if (btn.dataset.tab === 'cache' && !cacheInitialised) {
+      initCache();
+    }
     if (btn.dataset.tab === 'logs' && !logsInitialised) {
       initLogs();
     }
@@ -131,6 +135,205 @@ function formatDnsData(data) {
   }
   return String(data);
 }
+
+// ─── Cache ────────────────────────────────────────────────────────────────────
+
+const cacheStatsBar = document.getElementById('cacheStats');
+const cacheConfigBar = document.getElementById('cacheConfig');
+const cacheTableBody = document.querySelector('#cacheTable tbody');
+const cacheSearchInput = document.getElementById('cacheSearch');
+const cacheStatusSelect = document.getElementById('cacheStatus');
+const cachePageInfo = document.getElementById('cachePageInfo');
+const cachePrevBtn = document.getElementById('cachePrev');
+const cacheNextBtn = document.getElementById('cacheNext');
+const cacheRefreshBtn = document.getElementById('cacheRefresh');
+const flushAllBtn = document.getElementById('flushAll');
+const flushL1Btn = document.getElementById('flushL1');
+const flushL2Btn = document.getElementById('flushL2');
+
+let cachePage = 1;
+let cacheTotalPages = 1;
+
+async function initCache() {
+  cacheInitialised = true;
+  await Promise.all([fetchCacheStats(), fetchCacheSummary()]);
+}
+
+async function fetchCacheStats() {
+  try {
+    const res = await fetch('/api/cache/stats');
+    const data = await res.json();
+    if (!data.success) {
+      return;
+    }
+
+    const { l1, l2, config } = data.stats;
+
+    cacheStatsBar.innerHTML = [
+      statCard(`${l1.size}/${l1.maxSize}`, 'L1 Size'),
+      statCard(fmtRate(l1.hitRate), 'L1 Hit Rate', rateColor(l1.hitRate)),
+      statCard(l2.active, 'L2 Active'),
+      statCard(
+        l2.expired,
+        'L2 Expired',
+        l2.expired > 0 ? 'var(--orange)' : undefined
+      ),
+      statCard(fmtRate(l2.hitRate), 'L2 Hit Rate', rateColor(l2.hitRate)),
+      statCard(l1.hitCount + l2.hitCount, 'Total Hits', 'var(--green)'),
+    ].join('');
+
+    cacheConfigBar.innerHTML = [
+      `<span><strong>Cache:</strong> ${config.enabled ? 'Enabled' : 'Disabled'}</span>`,
+      `<span><strong>TTL:</strong> ${config.minTtl}s – ${config.maxTtl}s</span>`,
+      `<span><strong>Max Items:</strong> ${config.maxItems}</span>`,
+      `<span><strong>Purge Interval:</strong> ${config.purgeIntervalMin}min</span>`,
+    ].join('');
+  } catch {
+    cacheStatsBar.innerHTML = '';
+    cacheConfigBar.innerHTML = '';
+  }
+}
+
+function fmtRate(rate) {
+  return `${rate.toFixed(1)}%`;
+}
+
+function rateColor(rate) {
+  if (rate >= 70) {
+    return 'var(--green)';
+  }
+  if (rate >= 30) {
+    return 'var(--orange)';
+  }
+  return 'var(--red)';
+}
+
+async function fetchCacheSummary() {
+  const params = new URLSearchParams();
+  params.set('page', cachePage);
+  params.set('limit', '40');
+
+  const search = cacheSearchInput.value.trim();
+  const status = cacheStatusSelect.value;
+  if (search) {
+    params.set('search', search);
+  }
+  if (status && status !== 'all') {
+    params.set('status', status);
+  }
+
+  try {
+    const res = await fetch(`/api/cache/summary?${params}`);
+    const data = await res.json();
+
+    if (!data.success) {
+      cacheTableBody.innerHTML =
+        '<tr><td colspan="6" class="empty-state">Failed to load cache</td></tr>';
+      return;
+    }
+
+    const entries = data.entries || [];
+    cacheTotalPages = Math.max(
+      1,
+      Math.ceil((data.pagination?.total || 0) / (data.pagination?.limit || 40))
+    );
+
+    cachePageInfo.textContent = `${data.pagination?.page || 1} / ${cacheTotalPages}`;
+    cachePrevBtn.disabled = cachePage <= 1;
+    cacheNextBtn.disabled = cachePage >= cacheTotalPages;
+
+    if (entries.length === 0) {
+      cacheTableBody.innerHTML =
+        '<tr><td colspan="6" class="empty-state">No cache entries found</td></tr>';
+      return;
+    }
+
+    cacheTableBody.innerHTML = entries
+      .map(
+        (e) =>
+          `<tr>
+            <td>${esc(e.domain)}</td>
+            <td>${esc(e.queryType)}</td>
+            <td style="text-align:right">${e.ttl}s</td>
+            <td>${esc(e.upstream)}</td>
+            <td>${formatTime(e.expiresAt ? new Date(e.expiresAt).toISOString() : e.createdAt)}</td>
+            <td><span class="badge ${esc(e.status)}">${esc(e.status)}</span></td>
+          </tr>`
+      )
+      .join('');
+  } catch {
+    cacheTableBody.innerHTML =
+      '<tr><td colspan="6" class="empty-state">Network error</td></tr>';
+  }
+}
+
+async function doFlush(target) {
+  const label =
+    target === 'all'
+      ? 'All Cache'
+      : target === 'l1'
+        ? 'L1 (Memory)'
+        : 'L2 (DB)';
+  if (!confirm(`Flush ${label}?`)) {
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/cache/flush', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ target }),
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      const f = data.flushed || {};
+      alert(`Flushed — L1: ${f.l1 ?? 0}, L2: ${f.l2 ?? 0}`);
+      await Promise.all([fetchCacheStats(), fetchCacheSummary()]);
+    } else {
+      alert(`Flush failed: ${data.error || 'Unknown error'}`);
+    }
+  } catch (err) {
+    alert(`Flush error: ${err.message}`);
+  }
+}
+
+flushAllBtn.addEventListener('click', () => doFlush('all'));
+flushL1Btn.addEventListener('click', () => doFlush('l1'));
+flushL2Btn.addEventListener('click', () => doFlush('l2'));
+
+cacheRefreshBtn.addEventListener('click', () => {
+  fetchCacheStats();
+  fetchCacheSummary();
+});
+
+cachePrevBtn.addEventListener('click', () => {
+  if (cachePage > 1) {
+    cachePage--;
+    fetchCacheSummary();
+  }
+});
+
+cacheNextBtn.addEventListener('click', () => {
+  if (cachePage < cacheTotalPages) {
+    cachePage++;
+    fetchCacheSummary();
+  }
+});
+
+let cacheSearchDebounce = null;
+cacheSearchInput.addEventListener('input', () => {
+  clearTimeout(cacheSearchDebounce);
+  cacheSearchDebounce = setTimeout(() => {
+    cachePage = 1;
+    fetchCacheSummary();
+  }, 300);
+});
+
+cacheStatusSelect.addEventListener('change', () => {
+  cachePage = 1;
+  fetchCacheSummary();
+});
 
 // ─── Log Monitor ──────────────────────────────────────────────────────────────
 

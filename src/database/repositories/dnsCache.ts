@@ -1,4 +1,4 @@
-import { eq, and, lte, gt, count } from 'drizzle-orm';
+import { eq, and, lte, gt, like, count } from 'drizzle-orm';
 import type { Database } from '../connection.js';
 import { queryRawSql } from '../connection.js';
 import { dnsCache } from '../schema.js';
@@ -120,5 +120,70 @@ export class DnsCacheRepository {
     const expired = expiredResult?.count ?? 0;
 
     return { total, expired };
+  }
+
+  /**
+   * 캐시 엔트리 목록 조회 (responseData 제외, 페이지네이션/검색/상태 필터)
+   */
+  async listEntries(params: {
+    page: number;
+    limit: number;
+    search?: string;
+    status?: 'active' | 'expired' | 'all';
+  }): Promise<{
+    entries: Array<{
+      domain: string;
+      queryType: string;
+      ttl: number;
+      upstream: string;
+      expiresAt: number;
+      createdAt: Date;
+      status: 'active' | 'expired';
+    }>;
+    total: number;
+  }> {
+    const now = Date.now();
+    const offset = (params.page - 1) * params.limit;
+
+    const conditions = [];
+    if (params.search) {
+      conditions.push(like(dnsCache.domain, `%${params.search}%`));
+    }
+    if (params.status === 'active') {
+      conditions.push(gt(dnsCache.expiresAt, now));
+    } else if (params.status === 'expired') {
+      conditions.push(lte(dnsCache.expiresAt, now));
+    }
+
+    const where = conditions.length > 0 ? and(...conditions) : undefined;
+
+    const [countResult] = await this.db
+      .select({ count: count() })
+      .from(dnsCache)
+      .where(where);
+    const total = countResult?.count ?? 0;
+
+    const rows = await this.db
+      .select({
+        domain: dnsCache.domain,
+        queryType: dnsCache.queryType,
+        ttl: dnsCache.ttl,
+        upstream: dnsCache.upstream,
+        expiresAt: dnsCache.expiresAt,
+        createdAt: dnsCache.createdAt,
+      })
+      .from(dnsCache)
+      .where(where)
+      .limit(params.limit)
+      .offset(offset);
+
+    const entries = rows.map((row) => ({
+      ...row,
+      status: (row.expiresAt > now ? 'active' : 'expired') as
+        | 'active'
+        | 'expired',
+    }));
+
+    return { entries, total };
   }
 }
