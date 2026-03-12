@@ -7,6 +7,7 @@ import { projectRoot } from '../config/dir.js';
 dotenv.config({ path: path.resolve(projectRoot, '.env'), quiet: true });
 // 환경 변수 Zod 스키마
 const envSchema = z.object({
+  // WebUI
   WEBUI_HOST: z.string().default('127.0.0.1'),
   WEBUI_PORT: z.coerce.number().min(1).max(65535).default(4001),
   DB_PATH: z.string().default('./data/dohforest.db'),
