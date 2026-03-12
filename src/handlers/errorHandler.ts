@@ -9,7 +9,7 @@ export async function errorHandler(
   request: FastifyRequest,
   reply: FastifyReply
 ) {
-  logger.error('server', 'Unhandled error:', error);
+  logger.error('webui', 'Unhandled error:', error);
   const statusCode = error.statusCode || 500;
   return reply.code(statusCode).send({ error: error.stack });
 }

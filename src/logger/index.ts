@@ -1,4 +1,4 @@
-import type { LogLevel, LogCategory } from './types.js';
+import type { LogLevel, LogCategory, SaveLogFn } from './types.js';
 //------------------------------------------------------------------------------//
 
 // 로그 큐 시스템 (DB 준비 전 로그 버퍼링)
@@ -13,32 +13,16 @@ interface QueuedLog {
 // 내부 상태
 let logQueue: QueuedLog[] = [];
 let isDbReady = false;
-let saveToDbFn:
-  | ((
-      level: LogLevel,
-      category: LogCategory,
-      message: string,
-      meta?: unknown,
-      timestamp?: Date
-    ) => Promise<void>)
-  | null = null;
+let saveToDbFn: SaveLogFn | null = null;
 
 /**
  * DB 저장 함수 설정 및 대기 중인 로그 flush
+ * @internal logger/service.ts 에서만 호출
  */
-export const initializeLogDb = async (
-  fn: (
-    level: LogLevel,
-    category: LogCategory,
-    message: string,
-    meta?: unknown,
-    timestamp?: Date
-  ) => Promise<void>
-): Promise<void> => {
+export const initializeLogDb = async (fn: SaveLogFn): Promise<void> => {
   saveToDbFn = fn;
   isDbReady = true;
 
-  // 대기 중인 로그들을 DB에 저장
   if (logQueue.length > 0) {
     const queuedLogs = [...logQueue];
     logQueue = [];
@@ -47,7 +31,7 @@ export const initializeLogDb = async (
       try {
         await fn(log.level, log.category, log.message, log.meta, log.timestamp);
       } catch {
-        // 저장 실패 시 무시 (이미 큐에서 제거됨)
+        // DB 준비 전 기록된 로그는 유실되면 치명적인 것들이 없으니 조용히 무시
       }
     }
   }
@@ -64,10 +48,8 @@ const log = (
   const timestamp = new Date();
 
   if (isDbReady && saveToDbFn) {
-    // DB가 준비됨 - 바로 저장
     saveToDbFn(level, category, message, meta, timestamp).catch(() => {});
   } else {
-    // DB 미준비 - 큐에 저장
     logQueue.push({ level, category, message, meta, timestamp });
   }
 };
@@ -83,22 +65,3 @@ export const logger = {
   debug: (category: LogCategory, message: string, meta?: unknown) =>
     log('DEBUG', category, message, meta),
 };
-
-// 콘솔 로그 유틸 (비상용 - ESLint no-console 규칙 우회)
-/* eslint-disable no-console */
-export const console_log = (...args: unknown[]): void => {
-  console.log(...args);
-};
-
-export const console_error = (...args: unknown[]): void => {
-  console.error(...args);
-};
-
-export const console_warn = (...args: unknown[]): void => {
-  console.warn(...args);
-};
-
-export const console_debug = (...args: unknown[]): void => {
-  console.debug(...args);
-};
-/* eslint-enable no-console */

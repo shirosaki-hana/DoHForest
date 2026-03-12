@@ -29,7 +29,7 @@ export default defineConfig([
       '@typescript-eslint/no-explicit-any': 'error',
       'prefer-const': 'error',
       'no-var': 'error',
-      'no-console': 'off',
+      'no-console': 'error',
       eqeqeq: ['error', 'always'],
       curly: ['error', 'all'],
       'no-process-exit': 'error',

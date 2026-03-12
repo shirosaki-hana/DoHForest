@@ -1,5 +1,4 @@
 import { env } from '../config/env.js';
-import { logger } from '../logger/index.js';
 import type { DoHProvider, DoHQueryResult } from './types.js';
 //------------------------------------------------------------------------------//
 
@@ -19,6 +18,8 @@ const secondary: DoHProvider = {
  * 1. Primary 시도
  * 2. Primary 실패 시 Secondary 시도
  * 3. 모두 실패 시 null 반환
+ *
+ * 개별 프로바이더 실패 로그는 남기지 않음 — handler에서 쿼리 단위로 통합 기록
  */
 export async function queryUpstream(
   dnsWireBuffer: Buffer
@@ -28,17 +29,11 @@ export async function queryUpstream(
     return result;
   }
 
-  logger.warn('dns', 'Primary DoH provider failed, trying secondary', {
-    primary: primary.url,
-    secondary: secondary.url,
-  });
-
   const fallback = await queryProvider(secondary, dnsWireBuffer);
   if (fallback) {
     return fallback;
   }
 
-  logger.error('dns', 'All DoH providers failed');
   return null;
 }
 
@@ -61,14 +56,6 @@ async function queryProvider(
     });
 
     if (!response.ok) {
-      logger.warn(
-        'dns',
-        `DoH provider ${provider.name} returned HTTP ${response.status}`,
-        {
-          provider: provider.url,
-          status: response.status,
-        }
-      );
       return null;
     }
 
@@ -76,11 +63,7 @@ async function queryProvider(
     const responseBuffer = Buffer.from(arrayBuffer);
 
     return { responseBuffer, provider };
-  } catch (error) {
-    logger.warn('dns', `DoH provider ${provider.name} request failed`, {
-      provider: provider.url,
-      error: error instanceof Error ? error.message : String(error),
-    });
+  } catch {
     return null;
   }
 }

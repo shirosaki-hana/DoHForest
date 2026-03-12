@@ -6,10 +6,18 @@ export const LOG_CATEGORIES = [
   'auth',
   'system',
   'database',
-  'server',
+  'webui',
   'dns',
 ] as const;
 export type LogCategory = (typeof LOG_CATEGORIES)[number];
+
+export type SaveLogFn = (
+  level: LogLevel,
+  category: LogCategory,
+  message: string,
+  meta?: unknown,
+  timestamp?: Date
+) => Promise<void>;
 
 export interface LogItem {
   id: number;

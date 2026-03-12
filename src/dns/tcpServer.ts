@@ -24,7 +24,7 @@ export function startTcpServer(host: string, port: number): Promise<void> {
       });
 
       socket.on('error', (err) => {
-        logger.debug('dns', 'TCP client connection error', {
+        logger.error('dns', 'TCP client connection error', {
           error: err.message,
         });
       });

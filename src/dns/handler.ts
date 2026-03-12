@@ -5,7 +5,7 @@ import { resolveViaDoH, buildServFailResponse } from '../doh/client.js';
 //------------------------------------------------------------------------------//
 
 /**
- * DNS 요청 처리 파이프라인
+ * DNS 요청 처리 파이프라인 (1 query = 1 log)
  *
  * 1. dns-packet으로 디코딩
  * 2. 캐시 조회 (HIT → transaction ID 교체 후 즉시 반환)
@@ -14,21 +14,26 @@ import { resolveViaDoH, buildServFailResponse } from '../doh/client.js';
  * 5. 전체 실패 시 SERVFAIL 반환
  */
 export async function handleDnsQuery(queryBuffer: Buffer): Promise<Buffer> {
+  const startTime = Date.now();
+
   let query: dnsPacket.Packet;
   try {
     query = dnsPacket.decode(queryBuffer);
   } catch (error) {
-    logger.warn('dns', 'Failed to decode DNS query', {
+    logger.warn('dns', 'Query failed', {
+      result: 'decode_error',
       error: error instanceof Error ? error.message : String(error),
-      bufferLength: queryBuffer.length,
+      ms: Date.now() - startTime,
     });
     return buildServFailResponse(queryBuffer);
   }
 
   const question = query.questions?.[0];
   if (!question?.name || !question.type) {
-    logger.warn('dns', 'DNS query has no question section', {
+    logger.warn('dns', 'Query failed', {
+      result: 'invalid_query',
       id: query.id,
+      ms: Date.now() - startTime,
     });
     return buildServFailResponse(queryBuffer);
   }
@@ -40,16 +45,19 @@ export async function handleDnsQuery(queryBuffer: Buffer): Promise<Buffer> {
   // 캐시 조회
   const cached = await cacheLookup(domain, queryType, transactionId);
   if (cached) {
-    logger.debug('dns', 'Serving from cache', { domain, type: queryType });
+    logger.info('dns', `${domain} ${queryType}`, {
+      result: 'cache_hit',
+      ms: Date.now() - startTime,
+    });
     return cached;
   }
 
   // DoH 업스트림 질의
   const result = await resolveViaDoH(queryBuffer);
   if (!result) {
-    logger.error('dns', 'All upstream providers failed', {
-      domain,
-      type: queryType,
+    logger.warn('dns', `${domain} ${queryType}`, {
+      result: 'servfail',
+      ms: Date.now() - startTime,
     });
     return buildServFailResponse(queryBuffer);
   }
@@ -59,7 +67,6 @@ export async function handleDnsQuery(queryBuffer: Buffer): Promise<Buffer> {
     const response = dnsPacket.decode(result.responseBuffer);
     const answers = (response.answers ?? []) as Array<{ ttl?: number }>;
     const minTtl = extractMinTtl(answers);
-
     await cacheStore(
       domain,
       queryType,
@@ -67,17 +74,14 @@ export async function handleDnsQuery(queryBuffer: Buffer): Promise<Buffer> {
       minTtl,
       result.provider.url
     );
-  } catch (error) {
-    logger.warn('dns', 'Failed to cache DNS response (non-fatal)', {
-      domain,
-      error: error instanceof Error ? error.message : String(error),
-    });
+  } catch {
+    // 캐싱 실패는 non-fatal — 쿼리 자체는 성공
   }
 
-  logger.debug('dns', 'Resolved via DoH', {
-    domain,
-    type: queryType,
+  logger.info('dns', `${domain} ${queryType}`, {
+    result: 'resolved',
     provider: result.provider.name,
+    ms: Date.now() - startTime,
   });
 
   return result.responseBuffer;

@@ -6,11 +6,12 @@ import { fastifyConfig, staticFilesConfig } from './config/server.js';
 import { errorHandler } from './handlers/errorHandler.js';
 import { notFoundHandler } from './handlers/notFoundHandler.js';
 import { registerApiRoutes } from './api/index.js';
-import { logger, console_error, console_log } from './logger/index.js';
+import { console_error, console_log } from './logger/console.js';
 import { initializeDatabase } from './database/index.js';
 import { disconnectDatabase } from './database/connection.js';
-import { initializeLogger } from './logger/logs.js';
+import { initializeLogger } from './logger/service.js';
 import { startDnsServer, stopDnsServer } from './dns/server.js';
+import { startScheduler, stopScheduler } from './scheduler/index.js';
 //------------------------------------------------------------------------------//
 
 // Fastify 서버 생성
@@ -30,15 +31,11 @@ async function startServer(host: string, port: number) {
 
   const fastify = await createFastifyApp();
   await fastify.listen({ port, host });
-  logger.info('server', 'Server started successfully', {
-    host,
-    port,
-    url: `http://${host}:${port}`,
-    staticConfig: staticFilesConfig,
-  });
-  console_log(`[server] Server is running on http://${host}:${port}`);
+
+  console_log(`WebUI is running on http://${host}:${port}`);
 
   await startDnsServer();
+  startScheduler();
 
   return fastify;
 }
@@ -53,15 +50,16 @@ async function gracefulShutdown(
     return;
   }
   isShuttingDown = true;
-  console_log(`[server] Graceful shutdown initiated (signal: ${signal})`);
+  console_log(`Graceful shutdown initiated (signal: ${signal})`);
   try {
+    stopScheduler();
     await stopDnsServer();
     await fastify.close();
     disconnectDatabase();
-    console_log('[server] Graceful shutdown completed');
+    console_log('Graceful shutdown completed');
     process.exitCode = 0;
   } catch (error) {
-    console_error('[server] Graceful shutdown failed', error);
+    console_error('Graceful shutdown failed', error);
     process.exitCode = 1;
   }
 }

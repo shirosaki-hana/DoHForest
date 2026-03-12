@@ -23,8 +23,6 @@ export async function cacheLookup(
 
   const response = Buffer.from(entry.responseData);
   response.writeUInt16BE(transactionId, 0);
-
-  logger.debug('dns', 'Cache HIT', { domain, queryType });
   return response;
 }
 
@@ -52,8 +50,6 @@ export async function cacheStore(
     ttl,
     upstream
   );
-
-  logger.debug('dns', 'Cache STORE', { domain, queryType, ttl, upstream });
 }
 
 /**

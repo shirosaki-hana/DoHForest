@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { registerLogRoutes } from './logRoutes.js';
+import { registerDnsTestRoutes } from './dnsTestRoutes.js';
 //------------------------------------------------------------------------------//
 
 /**
@@ -7,4 +8,5 @@ import { registerLogRoutes } from './logRoutes.js';
  */
 export async function registerApiRoutes(app: FastifyInstance): Promise<void> {
   await app.register(registerLogRoutes);
+  await app.register(registerDnsTestRoutes);
 }

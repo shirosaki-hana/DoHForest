@@ -27,6 +27,12 @@ const envSchema = z.object({
     .transform((v) => v === 'true'),
   CACHE_MIN_TTL: z.coerce.number().min(0).default(60),
   CACHE_MAX_TTL: z.coerce.number().min(0).default(86400),
+
+  // 스케줄러
+  CACHE_PURGE_INTERVAL_MIN: z.coerce.number().min(1).default(5),
+  LOG_CLEANUP_INTERVAL_MIN: z.coerce.number().min(1).default(60),
+  LOG_RETENTION_DAYS: z.coerce.number().min(1).max(3650).default(30),
+  LOG_MAX_COUNT: z.coerce.number().min(100).max(10_000_000).default(100_000),
 });
 
 // 환경변수 파싱

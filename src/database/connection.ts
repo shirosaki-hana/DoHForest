@@ -4,7 +4,8 @@ import path from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { drizzle } from 'drizzle-orm/sqlite-proxy';
 import { env } from '../config/env.js';
-import { logger, console_log, console_warn } from '../logger/index.js';
+import { logger } from '../logger/index.js';
+import { console_log, console_warn } from '../logger/console.js';
 
 import * as schema from './schema.js';
 //------------------------------------------------------------------------------//
@@ -27,7 +28,6 @@ let dbDirectoryReady = false;
  */
 export async function ensureDbDirectory(): Promise<void> {
   if (dbDirectoryReady) {
-    logger.debug('database', 'Database directory already ensured, skipping');
     return;
   }
   const dbDir = path.dirname(dbPath);
@@ -143,13 +143,13 @@ export function disconnectDatabase(): void {
   } catch (error) {
     // 체크포인트 실패해도 close는 시도
     console_warn(
-      '[database] WAL checkpoint failed:',
+      'WAL checkpoint failed:',
       error instanceof Error ? error.message : String(error)
     );
   }
   sqliteDb.close();
   sqliteDb = null;
-  console_log('[database] Database connection closed');
+  console_log('Database connection closed');
 }
 
 /**
@@ -203,52 +203,9 @@ export function withTransaction<T>(fn: () => T): T {
   try {
     const result = fn();
     sqlite.exec('COMMIT');
-    logger.debug('database', 'Transaction committed successfully');
     return result;
   } catch (error) {
     sqlite.exec('ROLLBACK');
-    logger.warn('database', 'Transaction rolled back due to error', {
-      error: error instanceof Error ? error.message : String(error),
-    });
     throw error;
   }
-}
-
-/**
- * 비동기 트랜잭션 래퍼 - Drizzle ORM과 함께 사용
- * Repository 메서드에서 여러 DB 작업을 원자적으로 처리할 때 사용
- *
- * @example
- * await withTransactionAsync(async () => {
- *   await db.insert(table1).values(...);
- *   await db.update(table2).set(...);
- * });
- */
-export async function withTransactionAsync<T>(
-  fn: () => Promise<T>
-): Promise<T> {
-  const sqlite = getSqliteDb();
-  sqlite.exec('BEGIN IMMEDIATE');
-  try {
-    const result = await fn();
-    sqlite.exec('COMMIT');
-    logger.debug('database', 'Async transaction committed successfully');
-    return result;
-  } catch (error) {
-    sqlite.exec('ROLLBACK');
-    logger.warn('database', 'Async transaction rolled back due to error', {
-      error: error instanceof Error ? error.message : String(error),
-    });
-    throw error;
-  }
-}
-
-/**
- * WAL 체크포인트 실행
- * WAL 파일의 내용을 메인 DB 파일에 병합
- */
-export function walCheckpoint(): void {
-  const sqlite = getSqliteDb();
-  sqlite.exec('PRAGMA wal_checkpoint(TRUNCATE)');
-  logger.info('database', 'WAL checkpoint completed');
 }
