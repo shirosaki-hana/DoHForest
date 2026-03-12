@@ -21,9 +21,7 @@ const secondary: DoHProvider = {
  *
  * 개별 프로바이더 실패 로그는 남기지 않음 — handler에서 쿼리 단위로 통합 기록
  */
-export async function queryUpstream(
-  dnsWireBuffer: Buffer
-): Promise<DoHQueryResult | null> {
+export async function queryUpstream(dnsWireBuffer: Buffer): Promise<DoHQueryResult | null> {
   const result = await queryProvider(primary, dnsWireBuffer);
   if (result) {
     return result;
@@ -40,10 +38,7 @@ export async function queryUpstream(
 /**
  * 개별 프로바이더에 DoH POST 질의 (RFC 8484)
  */
-async function queryProvider(
-  provider: DoHProvider,
-  dnsWireBuffer: Buffer
-): Promise<DoHQueryResult | null> {
+async function queryProvider(provider: DoHProvider, dnsWireBuffer: Buffer): Promise<DoHQueryResult | null> {
   try {
     const response = await fetch(provider.url, {
       method: 'POST',

@@ -1,6 +1,5 @@
 /dist
 /node_modules
-/data
 .env
 ecosystem.config.js
 node-dns

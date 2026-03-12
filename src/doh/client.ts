@@ -8,9 +8,7 @@ import type { DoHQueryResult } from './types.js';
  * @param queryBuffer - 클라이언트로부터 받은 raw DNS query (wire format)
  * @returns DoH 응답 결과 또는 null (전체 실패 시)
  */
-export async function resolveViaDoH(
-  queryBuffer: Buffer
-): Promise<DoHQueryResult | null> {
+export async function resolveViaDoH(queryBuffer: Buffer): Promise<DoHQueryResult | null> {
   return queryUpstream(queryBuffer);
 }
 

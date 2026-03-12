@@ -4,18 +4,7 @@ import { resolveViaDoH } from '../doh/client.js';
 import { handleDnsQuery } from '../dns/handler.js';
 //------------------------------------------------------------------------------//
 
-const DNS_RECORD_TYPES = [
-  'A',
-  'AAAA',
-  'CNAME',
-  'MX',
-  'TXT',
-  'NS',
-  'SOA',
-  'SRV',
-  'PTR',
-  'CAA',
-] as const;
+const DNS_RECORD_TYPES = ['A', 'AAAA', 'CNAME', 'MX', 'TXT', 'NS', 'SOA', 'SRV', 'PTR', 'CAA'] as const;
 
 const RCODE_NAMES: Record<number, string> = {
   0: 'NOERROR',
@@ -56,9 +45,7 @@ export interface DnsLookupResult {
   cached: boolean;
 }
 
-export async function performDnsLookup(
-  input: DnsLookupInput
-): Promise<DnsLookupResult> {
+export async function performDnsLookup(input: DnsLookupInput): Promise<DnsLookupResult> {
   const { domain, type, bypassCache } = dnsLookupSchema.parse(input);
   const startTime = Date.now();
 
@@ -146,13 +133,9 @@ function serializeRecordData(record: dnsPacket.Answer): unknown {
     case 'TXT': {
       const txtData = (record as dnsPacket.TxtAnswer).data;
       if (Array.isArray(txtData)) {
-        return txtData.map((entry) =>
-          entry instanceof Buffer ? entry.toString('utf-8') : String(entry)
-        );
+        return txtData.map((entry) => (entry instanceof Buffer ? entry.toString('utf-8') : String(entry)));
       }
-      return txtData instanceof Buffer
-        ? txtData.toString('utf-8')
-        : String(txtData);
+      return txtData instanceof Buffer ? txtData.toString('utf-8') : String(txtData);
     }
 
     case 'SOA':

@@ -7,7 +7,7 @@ export const fastifyConfig = {
 };
 
 export const staticFilesConfig = {
-  root: path.join(projectRoot, 'pages/'),
+  root: path.join(projectRoot, 'webui/'),
   prefix: '/',
   etag: true,
   lastModified: true,

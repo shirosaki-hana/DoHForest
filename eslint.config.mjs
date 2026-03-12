@@ -21,10 +21,7 @@ export default defineConfig([
       '@typescript-eslint': tseslint.plugin,
     },
     rules: {
-      '@typescript-eslint/no-unused-vars': [
-        'error',
-        { argsIgnorePattern: '^_' },
-      ],
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/no-explicit-any': 'error',
       'prefer-const': 'error',
@@ -58,11 +55,7 @@ export default defineConfig([
       'arrow-body-style': ['warn', 'as-needed'],
       'object-shorthand': ['warn', 'always'],
       'prefer-template': 'warn',
-      'prefer-destructuring': [
-        'warn',
-        { array: false, object: true },
-        { enforceForRenamedProperties: false },
-      ],
+      'prefer-destructuring': ['warn', { array: false, object: true }, { enforceForRenamedProperties: false }],
     },
   },
 ]);

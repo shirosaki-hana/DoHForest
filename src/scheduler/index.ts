@@ -1,7 +1,6 @@
 import { env } from '../config/env.js';
 import { logger } from '../logger/index.js';
 import { purgeExpiredCache } from '../dns/cache.js';
-import { cleanupOldLogs } from '../logger/service.js';
 //------------------------------------------------------------------------------//
 
 interface ScheduledTask {
@@ -13,11 +12,7 @@ interface ScheduledTask {
 
 const tasks: ScheduledTask[] = [];
 
-function registerTask(
-  name: string,
-  intervalMs: number,
-  execute: () => Promise<void>
-): void {
+function registerTask(name: string, intervalMs: number, execute: () => Promise<void>): void {
   tasks.push({ name, intervalMs, execute, timer: null });
 }
 
@@ -35,32 +30,10 @@ function runTask(task: ScheduledTask): void {
 export function startScheduler(): void {
   // 인메모리 캐시 만료 정리
   if (env.CACHE_ENABLED) {
-    registerTask(
-      'purge-expired-cache',
-      env.CACHE_PURGE_INTERVAL_MIN * 60_000,
-      async () => {
-        purgeExpiredCache();
-      }
-    );
+    registerTask('purge-expired-cache', env.CACHE_PURGE_INTERVAL_MIN * 60_000, async () => {
+      purgeExpiredCache();
+    });
   }
-
-  // 오래된 로그 자동 정리
-  registerTask(
-    'cleanup-old-logs',
-    env.LOG_CLEANUP_INTERVAL_MIN * 60_000,
-    async () => {
-      const deleted = await cleanupOldLogs({
-        retentionDays: env.LOG_RETENTION_DAYS,
-        maxLogs: env.LOG_MAX_COUNT,
-      });
-      if (deleted > 0) {
-        logger.info(
-          'system',
-          `Scheduler: cleaned up ${deleted} old log entries`
-        );
-      }
-    }
-  );
 
   for (const task of tasks) {
     task.timer = setInterval(() => runTask(task), task.intervalMs);

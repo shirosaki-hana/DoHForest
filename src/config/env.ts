@@ -10,7 +10,6 @@ const envSchema = z.object({
   // WebUI
   WEBUI_HOST: z.string().default('127.0.0.1'),
   WEBUI_PORT: z.coerce.number().min(1).max(65535).default(4001),
-  DB_PATH: z.string().default('./data/dohforest.db'),
 
   // DNS 리스너
   DNS_HOST: z.string().default('127.0.0.1'),
@@ -32,9 +31,9 @@ const envSchema = z.object({
 
   // 스케줄러
   CACHE_PURGE_INTERVAL_MIN: z.coerce.number().min(1).default(5),
-  LOG_CLEANUP_INTERVAL_MIN: z.coerce.number().min(1).default(60),
-  LOG_RETENTION_DAYS: z.coerce.number().min(1).max(3650).default(30),
-  LOG_MAX_COUNT: z.coerce.number().min(100).max(10_000_000).default(100_000),
+
+  // 인메모리 로그 버퍼
+  LOG_MAX_COUNT: z.coerce.number().min(100).max(100_000).default(10_000),
 });
 
 // 환경변수 파싱

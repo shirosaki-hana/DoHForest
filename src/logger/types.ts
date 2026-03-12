@@ -1,16 +1,8 @@
 export const LOG_LEVELS = ['ERROR', 'WARN', 'INFO', 'DEBUG'] as const;
 export type LogLevel = (typeof LOG_LEVELS)[number];
 
-export const LOG_CATEGORIES = ['system', 'database', 'webui', 'dns'] as const;
+export const LOG_CATEGORIES = ['system', 'webui', 'dns'] as const;
 export type LogCategory = (typeof LOG_CATEGORIES)[number];
-
-export type SaveLogFn = (
-  level: LogLevel,
-  category: LogCategory,
-  message: string,
-  meta?: unknown,
-  timestamp?: Date
-) => Promise<void>;
 
 export interface LogItem {
   id: number;
@@ -54,25 +46,4 @@ export interface LogStatsResponse {
     last24h: number;
     last7d: number;
   };
-}
-
-export interface DeleteLogsRequest {
-  ids?: number[];
-  olderThan?: string;
-  level?: LogLevel;
-}
-
-export interface DeleteLogsResponse {
-  success: true;
-  deletedCount: number;
-}
-
-export interface LogSettings {
-  retentionDays: number;
-  maxLogs: number;
-}
-
-export interface LogSettingsResponse {
-  success: true;
-  settings: LogSettings;
 }

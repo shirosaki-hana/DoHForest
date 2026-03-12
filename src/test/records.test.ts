@@ -1,10 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-  queryUdp,
-  queryTcp,
-  getNonOptAnswers,
-  type TestCase,
-} from './helpers.js';
+import { queryUdp, queryTcp, getNonOptAnswers, type TestCase } from './helpers.js';
 
 const recordCases: TestCase[] = [
   { domain: 'example.com', type: 'A' },

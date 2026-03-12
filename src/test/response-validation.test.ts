@@ -1,10 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-  queryUdp,
-  queryTcp,
-  getNonOptAnswers,
-  type TestCase,
-} from './helpers.js';
+import { queryUdp, queryTcp, getNonOptAnswers, type TestCase } from './helpers.js';
 
 describe('Response flags', () => {
   it('UDP — QR=1, RD=1, RA=1 in response', async () => {
@@ -49,10 +44,7 @@ describe('Answer record type matching', () => {
       const res = await queryUdp(tc);
       const answers = getNonOptAnswers(res);
       for (const ans of answers) {
-        expect(
-          [tc.type, 'CNAME'].includes(ans.type),
-          `expected ${tc.type} or CNAME, got ${ans.type}`
-        ).toBe(true);
+        expect([tc.type, 'CNAME'].includes(ans.type), `expected ${tc.type} or CNAME, got ${ans.type}`).toBe(true);
       }
     });
   }

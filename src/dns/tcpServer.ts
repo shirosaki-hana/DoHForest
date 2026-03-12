@@ -51,10 +51,7 @@ export function startTcpServer(host: string, port: number): Promise<void> {
 /**
  * TCP 버퍼에서 length-prefixed DNS 메시지를 추출하여 처리
  */
-async function processBuffer(
-  socket: net.Socket,
-  buffer: Buffer
-): Promise<Buffer> {
+async function processBuffer(socket: net.Socket, buffer: Buffer): Promise<Buffer> {
   while (buffer.length >= 2) {
     const msgLength = buffer.readUInt16BE(0);
 

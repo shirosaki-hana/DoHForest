@@ -67,13 +67,7 @@ export async function handleDnsQuery(queryBuffer: Buffer): Promise<Buffer> {
     const response = dnsPacket.decode(result.responseBuffer);
     const answers = (response.answers ?? []) as Array<{ ttl?: number }>;
     const minTtl = extractMinTtl(answers);
-    cacheStore(
-      domain,
-      queryType,
-      result.responseBuffer,
-      minTtl,
-      result.provider.url
-    );
+    cacheStore(domain, queryType, result.responseBuffer, minTtl, result.provider.url);
   } catch {
     // 캐싱 실패는 non-fatal — 쿼리 자체는 성공
   }

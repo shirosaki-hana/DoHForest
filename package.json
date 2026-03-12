@@ -28,7 +28,6 @@
     "@fastify/static": "^9.0.0",
     "dns-packet": "^5.6.1",
     "dotenv": "^17.3.1",
-    "drizzle-orm": "^0.45.1",
     "esbuild": "^0.27.3",
     "fastify": "^5.8.2",
     "lru-cache": "^11.2.6",

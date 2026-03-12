@@ -64,11 +64,7 @@ function parseCacheKey(key: string): { domain: string; queryType: string } {
  * 캐시에서 DNS 응답 조회
  * HIT 시 transaction ID(처음 2바이트)를 요청의 것으로 교체하여 반환
  */
-export function cacheLookup(
-  domain: string,
-  queryType: string,
-  transactionId: number
-): Buffer | null {
+export function cacheLookup(domain: string, queryType: string, transactionId: number): Buffer | null {
   if (!env.CACHE_ENABLED) {
     return null;
   }
@@ -94,13 +90,7 @@ export function cacheLookup(
  * DNS 응답을 캐시에 저장
  * 응답 Answer 섹션의 최소 TTL을 기준으로 환경변수 범위 내 클램핑
  */
-export function cacheStore(
-  domain: string,
-  queryType: string,
-  responseBuffer: Buffer,
-  rawTtl: number,
-  upstream: string
-): void {
+export function cacheStore(domain: string, queryType: string, responseBuffer: Buffer, rawTtl: number, upstream: string): void {
   if (!env.CACHE_ENABLED) {
     return;
   }
@@ -110,11 +100,7 @@ export function cacheStore(
   const ttlMs = ttl * 1000;
   const expiresAt = Date.now() + ttlMs;
 
-  memoryCache.set(
-    key,
-    { responseData: responseBuffer, expiresAt, ttl, upstream },
-    { ttl: ttlMs }
-  );
+  memoryCache.set(key, { responseData: responseBuffer, expiresAt, ttl, upstream }, { ttl: ttlMs });
 }
 
 /**
@@ -198,8 +184,7 @@ export function listMemoryEntries(params: {
 
   for (const [key, entry] of memoryCache.entries()) {
     const { domain, queryType } = parseCacheKey(key);
-    const status: 'active' | 'expired' =
-      entry.expiresAt > now ? 'active' : 'expired';
+    const status: 'active' | 'expired' = entry.expiresAt > now ? 'active' : 'expired';
 
     if (params.search && !domain.includes(params.search.toLowerCase())) {
       continue;

@@ -7,12 +7,8 @@ let cacheInitialised = false;
 
 document.querySelectorAll('.tab').forEach((btn) => {
   btn.addEventListener('click', () => {
-    document
-      .querySelectorAll('.tab')
-      .forEach((t) => t.classList.remove('active'));
-    document
-      .querySelectorAll('.panel')
-      .forEach((p) => p.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach((t) => t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach((p) => p.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById(btn.dataset.tab).classList.add('active');
 
@@ -97,14 +93,10 @@ dnsForm.addEventListener('submit', async (e) => {
 
     const rows = [...(data.answers || []), ...(data.authority || [])];
     if (rows.length === 0) {
-      dnsAnswersBody.innerHTML =
-        '<tr><td colspan="4" class="empty-state">No records returned</td></tr>';
+      dnsAnswersBody.innerHTML = '<tr><td colspan="4" class="empty-state">No records returned</td></tr>';
     } else {
       dnsAnswersBody.innerHTML = rows
-        .map(
-          (r) =>
-            `<tr><td>${esc(r.name)}</td><td>${esc(r.type)}</td><td>${r.ttl}</td><td>${esc(formatDnsData(r.data))}</td></tr>`
-        )
+        .map((r) => `<tr><td>${esc(r.name)}</td><td>${esc(r.type)}</td><td>${r.ttl}</td><td>${esc(formatDnsData(r.data))}</td></tr>`)
         .join('');
     }
     dnsResultSection.classList.remove('hidden');
@@ -218,24 +210,19 @@ async function fetchCacheSummary() {
     const data = await res.json();
 
     if (!data.success) {
-      cacheTableBody.innerHTML =
-        '<tr><td colspan="6" class="empty-state">Failed to load cache</td></tr>';
+      cacheTableBody.innerHTML = '<tr><td colspan="6" class="empty-state">Failed to load cache</td></tr>';
       return;
     }
 
     const entries = data.entries || [];
-    cacheTotalPages = Math.max(
-      1,
-      Math.ceil((data.pagination?.total || 0) / (data.pagination?.limit || 40))
-    );
+    cacheTotalPages = Math.max(1, Math.ceil((data.pagination?.total || 0) / (data.pagination?.limit || 40)));
 
     cachePageInfo.textContent = `${data.pagination?.page || 1} / ${cacheTotalPages}`;
     cachePrevBtn.disabled = cachePage <= 1;
     cacheNextBtn.disabled = cachePage >= cacheTotalPages;
 
     if (entries.length === 0) {
-      cacheTableBody.innerHTML =
-        '<tr><td colspan="6" class="empty-state">No cache entries found</td></tr>';
+      cacheTableBody.innerHTML = '<tr><td colspan="6" class="empty-state">No cache entries found</td></tr>';
       return;
     }
 
@@ -253,8 +240,7 @@ async function fetchCacheSummary() {
       )
       .join('');
   } catch {
-    cacheTableBody.innerHTML =
-      '<tr><td colspan="6" class="empty-state">Network error</td></tr>';
+    cacheTableBody.innerHTML = '<tr><td colspan="6" class="empty-state">Network error</td></tr>';
   }
 }
 
@@ -396,15 +382,13 @@ async function fetchLogs() {
     logNextBtn.disabled = logPage >= logTotalPages;
 
     if (logs.length === 0) {
-      logTableBody.innerHTML =
-        '<tr><td colspan="4" class="empty-state">No logs found</td></tr>';
+      logTableBody.innerHTML = '<tr><td colspan="4" class="empty-state">No logs found</td></tr>';
       return;
     }
 
     logTableBody.innerHTML = logs
       .map((log) => {
-        const hasMeta =
-          log.meta !== null && log.meta !== undefined && log.meta !== '';
+        const hasMeta = log.meta !== null && log.meta !== undefined && log.meta !== '';
         const metaRow = hasMeta
           ? `<tr class="meta-row hidden"><td colspan="4"><pre class="log-meta">${esc(formatMeta(log.meta))}</pre></td></tr>`
           : '';
@@ -427,8 +411,7 @@ async function fetchLogs() {
       });
     });
   } catch {
-    logTableBody.innerHTML =
-      '<tr><td colspan="4" class="empty-state">Network error</td></tr>';
+    logTableBody.innerHTML = '<tr><td colspan="4" class="empty-state">Network error</td></tr>';
   }
 }
 

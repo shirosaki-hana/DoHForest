@@ -1,14 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import dnsPacket from 'dns-packet';
-import {
-  queryUdp,
-  sendRawTcp,
-  sendTcpPipelined,
-  encodeDnsQuery,
-  getNonOptAnswers,
-  DNS_HOST,
-  DNS_PORT,
-} from './helpers.js';
+import { queryUdp, sendRawTcp, sendTcpPipelined, encodeDnsQuery, getNonOptAnswers, DNS_HOST, DNS_PORT } from './helpers.js';
 
 describe('TCP pipelining', () => {
   it('receives 2 correct responses for 2 queries on one connection', async () => {
@@ -113,29 +105,27 @@ describe('EDNS0 (OPT record)', () => {
     });
 
     const dgram = await import('node:dgram');
-    const res = await new Promise<dnsPacket.DecodedPacket>(
-      (resolve, reject) => {
-        const client = dgram.createSocket('udp4');
-        const timer = setTimeout(() => {
-          client.close();
-          reject(new Error('EDNS0 UDP timeout'));
-        }, 5000);
+    const res = await new Promise<dnsPacket.DecodedPacket>((resolve, reject) => {
+      const client = dgram.createSocket('udp4');
+      const timer = setTimeout(() => {
+        client.close();
+        reject(new Error('EDNS0 UDP timeout'));
+      }, 5000);
 
-        client.send(query, DNS_PORT, DNS_HOST, (err) => {
-          if (err) {
-            clearTimeout(timer);
-            client.close();
-            reject(err);
-          }
-        });
-
-        client.on('message', (msg) => {
+      client.send(query, DNS_PORT, DNS_HOST, (err) => {
+        if (err) {
           clearTimeout(timer);
           client.close();
-          resolve(dnsPacket.decode(msg));
-        });
-      }
-    );
+          reject(err);
+        }
+      });
+
+      client.on('message', (msg) => {
+        clearTimeout(timer);
+        client.close();
+        resolve(dnsPacket.decode(msg));
+      });
+    });
 
     expect(res.id).toBe(0xed50);
     const answers = (res.answers ?? []).filter((a) => a.type !== 'OPT');
@@ -163,41 +153,39 @@ describe('EDNS0 (OPT record)', () => {
     });
 
     const net = await import('node:net');
-    const res = await new Promise<dnsPacket.DecodedPacket>(
-      (resolve, reject) => {
-        const client = new net.Socket();
-        const timer = setTimeout(() => {
-          client.destroy();
-          reject(new Error('EDNS0 TCP timeout'));
-        }, 5000);
+    const res = await new Promise<dnsPacket.DecodedPacket>((resolve, reject) => {
+      const client = new net.Socket();
+      const timer = setTimeout(() => {
+        client.destroy();
+        reject(new Error('EDNS0 TCP timeout'));
+      }, 5000);
 
-        const prefix = Buffer.alloc(2);
-        prefix.writeUInt16BE(query.length, 0);
+      const prefix = Buffer.alloc(2);
+      prefix.writeUInt16BE(query.length, 0);
 
-        client.connect(DNS_PORT, DNS_HOST, () => {
-          client.write(Buffer.concat([prefix, query]));
-        });
+      client.connect(DNS_PORT, DNS_HOST, () => {
+        client.write(Buffer.concat([prefix, query]));
+      });
 
-        const chunks: Buffer[] = [];
-        client.on('data', (data: Buffer | string) => {
-          chunks.push(Buffer.isBuffer(data) ? data : Buffer.from(data));
-          const acc = Buffer.concat(chunks);
-          if (acc.length < 2) return;
-          const len = acc.readUInt16BE(0);
-          if (acc.length >= 2 + len) {
-            clearTimeout(timer);
-            client.destroy();
-            resolve(dnsPacket.decode(acc.subarray(2, 2 + len)));
-          }
-        });
-
-        client.on('error', (err) => {
+      const chunks: Buffer[] = [];
+      client.on('data', (data: Buffer | string) => {
+        chunks.push(Buffer.isBuffer(data) ? data : Buffer.from(data));
+        const acc = Buffer.concat(chunks);
+        if (acc.length < 2) return;
+        const len = acc.readUInt16BE(0);
+        if (acc.length >= 2 + len) {
           clearTimeout(timer);
           client.destroy();
-          reject(err);
-        });
-      }
-    );
+          resolve(dnsPacket.decode(acc.subarray(2, 2 + len)));
+        }
+      });
+
+      client.on('error', (err) => {
+        clearTimeout(timer);
+        client.destroy();
+        reject(err);
+      });
+    });
 
     expect(res.id).toBe(0xed51);
     const answers = (res.answers ?? []).filter((a) => a.type !== 'OPT');

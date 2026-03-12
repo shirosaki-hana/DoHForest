@@ -11,10 +11,7 @@ import { startTcpServer, stopTcpServer } from './tcpServer.js';
 export async function startDnsServer(): Promise<void> {
   const { DNS_HOST, DNS_PORT } = env;
 
-  await Promise.all([
-    startUdpServer(DNS_HOST, DNS_PORT),
-    startTcpServer(DNS_HOST, DNS_PORT),
-  ]);
+  await Promise.all([startUdpServer(DNS_HOST, DNS_PORT), startTcpServer(DNS_HOST, DNS_PORT)]);
 
   logger.info('dns', 'DNS server started', {
     host: DNS_HOST,

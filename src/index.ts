@@ -2,14 +2,11 @@ import Fastify from 'fastify';
 import staticFiles from '@fastify/static';
 
 import { env } from './config/env.js';
-import { fastifyConfig, staticFilesConfig } from './config/server.js';
+import { fastifyConfig, staticFilesConfig } from './config/webui.js';
 import { errorHandler } from './handlers/errorHandler.js';
 import { notFoundHandler } from './handlers/notFoundHandler.js';
 import { registerApiRoutes } from './api/index.js';
 import { console_error, console_log } from './logger/console.js';
-import { initializeDatabase } from './database/index.js';
-import { disconnectDatabase } from './database/connection.js';
-import { initializeLogger } from './logger/service.js';
 import { startDnsServer, stopDnsServer } from './dns/server.js';
 import { startScheduler, stopScheduler } from './scheduler/index.js';
 //------------------------------------------------------------------------------//
@@ -26,9 +23,6 @@ async function createFastifyApp() {
 
 // 서버 시작 함수
 async function startServer(host: string, port: number) {
-  await initializeDatabase();
-  await initializeLogger();
-
   const fastify = await createFastifyApp();
   await fastify.listen({ port, host });
 
@@ -42,10 +36,7 @@ async function startServer(host: string, port: number) {
 
 let isShuttingDown = false;
 
-async function gracefulShutdown(
-  fastify: Awaited<ReturnType<typeof createFastifyApp>>,
-  signal: string
-) {
+async function gracefulShutdown(fastify: Awaited<ReturnType<typeof createFastifyApp>>, signal: string) {
   if (isShuttingDown) {
     return;
   }
@@ -55,7 +46,6 @@ async function gracefulShutdown(
     stopScheduler();
     await stopDnsServer();
     await fastify.close();
-    disconnectDatabase();
     console_log('Graceful shutdown completed');
     process.exitCode = 0;
   } catch (error) {
@@ -67,12 +57,8 @@ async function gracefulShutdown(
 async function main() {
   try {
     const fastify = await startServer(env.WEBUI_HOST, env.WEBUI_PORT);
-    process.on('SIGINT', () =>
-      gracefulShutdown(fastify, 'SIGINT').catch(console_error)
-    );
-    process.on('SIGTERM', () =>
-      gracefulShutdown(fastify, 'SIGTERM').catch(console_error)
-    );
+    process.on('SIGINT', () => gracefulShutdown(fastify, 'SIGINT').catch(console_error));
+    process.on('SIGTERM', () => gracefulShutdown(fastify, 'SIGTERM').catch(console_error));
   } catch (error) {
     console_error(error);
     process.exitCode = 1;

@@ -1,10 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-  queryUdp,
-  queryTcp,
-  getNonOptAnswers,
-  formatAnswerData,
-} from './helpers.js';
+import { queryUdp, queryTcp, getNonOptAnswers, formatAnswerData } from './helpers.js';
 
 describe('DNS cache', () => {
   it('2nd query should be faster than 1st (cache hit)', async () => {
@@ -66,9 +61,7 @@ describe('DNS cache', () => {
       const resAAAA = await queryUdp(domainAAAA);
 
       const answersA = getNonOptAnswers(resA).map(formatAnswerData).sort();
-      const answersAAAA = getNonOptAnswers(resAAAA)
-        .map(formatAnswerData)
-        .sort();
+      const answersAAAA = getNonOptAnswers(resAAAA).map(formatAnswerData).sort();
 
       expect(resA.rcode).toBe('NOERROR');
       expect(resAAAA.rcode).toBe('NOERROR');
@@ -88,9 +81,7 @@ describe('DNS cache', () => {
       const cached = await queryUdp(tc, 0x2222);
 
       const freshAnswers = getNonOptAnswers(fresh).map(formatAnswerData).sort();
-      const cachedAnswers = getNonOptAnswers(cached)
-        .map(formatAnswerData)
-        .sort();
+      const cachedAnswers = getNonOptAnswers(cached).map(formatAnswerData).sort();
 
       expect(freshAnswers.length).toBeGreaterThan(0);
       expect(cachedAnswers).toEqual(freshAnswers);

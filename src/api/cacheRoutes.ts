@@ -1,11 +1,6 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { ZodError } from 'zod';
-import {
-  getCacheStatsResult,
-  getCacheSummary,
-  flushCache,
-  type CacheSummaryInput,
-} from '../services/cacheService.js';
+import { getCacheStatsResult, getCacheSummary, flushCache, type CacheSummaryInput } from '../services/cacheService.js';
 //------------------------------------------------------------------------------//
 
 function parseIntParam(value: unknown): number | undefined {
@@ -17,10 +12,7 @@ function parseIntParam(value: unknown): number | undefined {
 }
 
 // GET /api/cache/stats
-async function cacheStatsHandler(
-  _request: FastifyRequest,
-  reply: FastifyReply
-) {
+async function cacheStatsHandler(_request: FastifyRequest, reply: FastifyReply) {
   const stats = getCacheStatsResult();
   return reply.send({ success: true, stats });
 }
@@ -46,10 +38,7 @@ async function cacheSummaryHandler(
 }
 
 // POST /api/cache/flush
-async function cacheFlushHandler(
-  _request: FastifyRequest,
-  reply: FastifyReply
-) {
+async function cacheFlushHandler(_request: FastifyRequest, reply: FastifyReply) {
   const result = flushCache();
   return reply.send({ success: true, ...result });
 }
@@ -62,9 +51,7 @@ export async function registerCacheRoutes(app: FastifyInstance): Promise<void> {
       return reply.code(400).send({
         success: false,
         error: 'Validation Error',
-        details: error.issues
-          .map((i) => `${i.path.join('.')}: ${i.message}`)
-          .join('; '),
+        details: error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; '),
       });
     }
   });

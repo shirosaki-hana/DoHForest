@@ -12,9 +12,7 @@ describe('buildServFailResponse', () => {
       questions: [{ type: 'A', name: 'example.com' }],
     });
 
-    const res = dnsPacket.decode(
-      buildServFailResponse(query)
-    ) as DecodedResponse;
+    const res = dnsPacket.decode(buildServFailResponse(query)) as DecodedResponse;
     expect(res.id).toBe(0xbeef);
     expect(res.rcode).toBe('SERVFAIL');
   });
