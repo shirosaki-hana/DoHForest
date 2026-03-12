@@ -1,26 +1,18 @@
 import { LRUCache } from 'lru-cache';
 import { env } from '../config/env.js';
 import { logger } from '../logger/index.js';
-import { database } from '../database/index.js';
 //------------------------------------------------------------------------------//
 
 interface MemoryCacheEntry {
   responseData: Buffer;
   expiresAt: number;
+  ttl: number;
+  upstream: string;
 }
 
-export interface L1CacheStats {
+export interface CacheStats {
   size: number;
   maxSize: number;
-  hitCount: number;
-  missCount: number;
-  hitRate: number;
-}
-
-export interface L2CacheStats {
-  total: number;
-  active: number;
-  expired: number;
   hitCount: number;
   missCount: number;
   hitRate: number;
@@ -31,91 +23,84 @@ export interface CacheConfig {
   minTtl: number;
   maxTtl: number;
   maxItems: number;
-  purgeIntervalMin: number;
 }
 
 export interface CacheStatsResult {
-  l1: L1CacheStats;
-  l2: L2CacheStats;
+  stats: CacheStats;
   config: CacheConfig;
 }
 
-// L1: 인메모리 LRU+TTL 캐시
+export interface CacheEntry {
+  domain: string;
+  queryType: string;
+  ttl: number;
+  upstream: string;
+  expiresAt: number;
+  status: 'active' | 'expired';
+}
+
+export interface ListEntriesResult {
+  entries: CacheEntry[];
+  total: number;
+}
+
 const memoryCache = new LRUCache<string, MemoryCacheEntry>({
   max: env.CACHE_MAX_ITEMS,
 });
 
-// 히트/미스 카운터 (프로세스 메모리, 재시작 시 리셋)
-let l1Hits = 0;
-let l1Misses = 0;
-let l2Hits = 0;
-let l2Misses = 0;
+let hits = 0;
+let misses = 0;
 
 function cacheKey(domain: string, queryType: string): string {
   return `${domain}|${queryType}`;
 }
 
+function parseCacheKey(key: string): { domain: string; queryType: string } {
+  const sep = key.indexOf('|');
+  return { domain: key.slice(0, sep), queryType: key.slice(sep + 1) };
+}
+
 /**
- * 캐시에서 DNS 응답 조회 (L1 메모리 → L2 SQLite)
+ * 캐시에서 DNS 응답 조회
  * HIT 시 transaction ID(처음 2바이트)를 요청의 것으로 교체하여 반환
  */
-export async function cacheLookup(
+export function cacheLookup(
   domain: string,
   queryType: string,
   transactionId: number
-): Promise<Buffer | null> {
+): Buffer | null {
   if (!env.CACHE_ENABLED) {
     return null;
   }
 
   const key = cacheKey(domain.toLowerCase(), queryType);
 
-  // L1: 메모리 캐시
   const mem = memoryCache.get(key);
   if (mem) {
     if (mem.expiresAt > Date.now()) {
-      l1Hits++;
+      hits++;
       const response = Buffer.from(mem.responseData);
       response.writeUInt16BE(transactionId, 0);
       return response;
     }
     memoryCache.delete(key);
   }
-  l1Misses++;
+  misses++;
 
-  // L2: SQLite (미스 시 메모리로 승격)
-  const entry = await database.dnsCache.lookup(domain.toLowerCase(), queryType);
-  if (!entry) {
-    l2Misses++;
-    return null;
-  }
-  l2Hits++;
-
-  const remainingTtl = entry.expiresAt - Date.now();
-  if (remainingTtl > 0) {
-    memoryCache.set(
-      key,
-      { responseData: entry.responseData, expiresAt: entry.expiresAt },
-      { ttl: remainingTtl }
-    );
-  }
-
-  const response = Buffer.from(entry.responseData);
-  response.writeUInt16BE(transactionId, 0);
-  return response;
+  return null;
 }
 
 /**
- * DNS 응답을 캐시에 저장 (L1 + L2 write-through)
+ * DNS 응답을 캐시에 저장
  * 응답 Answer 섹션의 최소 TTL을 기준으로 환경변수 범위 내 클램핑
  */
-export async function cacheStore(
+export function cacheStore(
   domain: string,
   queryType: string,
   responseBuffer: Buffer,
   rawTtl: number,
   upstream: string
-): Promise<void> {
+): void {
   if (!env.CACHE_ENABLED) {
     return;
   }
@@ -125,20 +110,10 @@ export async function cacheStore(
   const ttlMs = ttl * 1000;
   const expiresAt = Date.now() + ttlMs;
 
-  // L1: 메모리
   memoryCache.set(
     key,
-    { responseData: responseBuffer, expiresAt },
+    { responseData: responseBuffer, expiresAt, ttl, upstream },
     { ttl: ttlMs }
-  );
-
-  // L2: SQLite
-  await database.dnsCache.upsert(
-    domain.toLowerCase(),
-    queryType,
-    responseBuffer,
-    ttl,
-    upstream
   );
 }
 
@@ -151,12 +126,11 @@ function clampTtl(ttl: number): number {
 
 /**
  * 만료된 캐시 정리 (주기적 호출용)
- * 메모리: lru-cache 내장 purgeStale / SQLite: DELETE expired rows
  */
-export async function purgeExpiredCache(): Promise<number> {
+export function purgeExpiredCache(): number {
+  const before = memoryCache.size;
   memoryCache.purgeStale();
-
-  const purged = await database.dnsCache.purgeExpired();
+  const purged = before - memoryCache.size;
   if (purged > 0) {
     logger.info('dns', `Purged ${purged} expired cache entries`);
   }
@@ -181,50 +155,80 @@ export function extractMinTtl(answers: Array<{ ttl?: number }>): number {
   return minTtl === Infinity ? env.CACHE_MIN_TTL : minTtl;
 }
 
-function hitRate(hits: number, misses: number): number {
-  const total = hits + misses;
+function hitRate(h: number, m: number): number {
+  const total = h + m;
   if (total === 0) {
     return 0;
   }
-  return Math.round((hits / total) * 10000) / 100;
+  return Math.round((h / total) * 10000) / 100;
 }
 
 /**
- * L1/L2 통합 캐시 통계 반환
+ * 캐시 통계 반환
  */
-export async function getCacheStats(): Promise<CacheStatsResult> {
-  const l2DbStats = await database.dnsCache.getStats();
-
+export function getCacheStats(): CacheStatsResult {
   return {
-    l1: {
+    stats: {
       size: memoryCache.size,
       maxSize: env.CACHE_MAX_ITEMS,
-      hitCount: l1Hits,
-      missCount: l1Misses,
-      hitRate: hitRate(l1Hits, l1Misses),
-    },
-    l2: {
-      total: l2DbStats.total,
-      active: l2DbStats.total - l2DbStats.expired,
-      expired: l2DbStats.expired,
-      hitCount: l2Hits,
-      missCount: l2Misses,
-      hitRate: hitRate(l2Hits, l2Misses),
+      hitCount: hits,
+      missCount: misses,
+      hitRate: hitRate(hits, misses),
     },
     config: {
       enabled: env.CACHE_ENABLED,
       minTtl: env.CACHE_MIN_TTL,
       maxTtl: env.CACHE_MAX_TTL,
       maxItems: env.CACHE_MAX_ITEMS,
-      purgeIntervalMin: env.CACHE_PURGE_INTERVAL_MIN,
     },
   };
 }
 
 /**
- * L1 메모리 캐시 플러시, 삭제된 엔트리 수 반환
+ * 메모리 캐시 엔트리 목록 조회 (검색, 상태 필터, 페이지네이션)
  */
-export function flushL1Cache(): number {
+export function listMemoryEntries(params: {
+  page: number;
+  limit: number;
+  search?: string;
+  status?: 'active' | 'expired' | 'all';
+}): ListEntriesResult {
+  const now = Date.now();
+  const filtered: CacheEntry[] = [];
+
+  for (const [key, entry] of memoryCache.entries()) {
+    const { domain, queryType } = parseCacheKey(key);
+    const status: 'active' | 'expired' =
+      entry.expiresAt > now ? 'active' : 'expired';
+
+    if (params.search && !domain.includes(params.search.toLowerCase())) {
+      continue;
+    }
+    if (params.status && params.status !== 'all' && status !== params.status) {
+      continue;
+    }
+
+    filtered.push({
+      domain,
+      queryType,
+      ttl: entry.ttl,
+      upstream: entry.upstream,
+      expiresAt: entry.expiresAt,
+      status,
+    });
+  }
+
+  const total = filtered.length;
+  const offset = (params.page - 1) * params.limit;
+  const entries = filtered.slice(offset, offset + params.limit);
+
+  return { entries, total };
+}
+
+/**
+ * 메모리 캐시 플러시, 삭제된 엔트리 수 반환
+ */
+export function flushCache(): number {
   const size = memoryCache.size;
   memoryCache.clear();
   return size;
@@ -234,8 +238,6 @@ export function flushL1Cache(): number {
  * 히트/미스 카운터 리셋
  */
 export function resetCacheCounters(): void {
-  l1Hits = 0;
-  l1Misses = 0;
-  l2Hits = 0;
-  l2Misses = 0;
+  hits = 0;
+  misses = 0;
 }

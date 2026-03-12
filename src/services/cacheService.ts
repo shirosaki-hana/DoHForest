@@ -1,9 +1,9 @@
 import { z } from 'zod';
-import { database } from '../database/index.js';
 import {
   getCacheStats,
-  flushL1Cache,
+  flushCache as flushMemoryCache,
   resetCacheCounters,
+  listMemoryEntries,
   type CacheStatsResult,
 } from '../dns/cache.js';
 import { logger } from '../logger/index.js';
@@ -11,7 +11,7 @@ import { logger } from '../logger/index.js';
 
 // --- Stats ---
 
-export async function getCacheStatsResult(): Promise<CacheStatsResult> {
+export function getCacheStatsResult(): CacheStatsResult {
   return getCacheStats();
 }
 
@@ -26,9 +26,9 @@ const cacheSummarySchema = z.object({
 
 export type CacheSummaryInput = z.input<typeof cacheSummarySchema>;
 
-export async function getCacheSummary(input: CacheSummaryInput) {
+export function getCacheSummary(input: CacheSummaryInput) {
   const params = cacheSummarySchema.parse(input);
-  const { entries, total } = await database.dnsCache.listEntries(params);
+  const { entries, total } = listMemoryEntries(params);
 
   return {
     entries,
@@ -42,31 +42,11 @@ export async function getCacheSummary(input: CacheSummaryInput) {
 
 // --- Flush ---
 
-const cacheFlushSchema = z.object({
-  target: z.enum(['all', 'l1', 'l2']).default('all'),
-});
-
-export type CacheFlushInput = z.input<typeof cacheFlushSchema>;
-
-export async function flushCache(input: CacheFlushInput) {
-  const { target } = cacheFlushSchema.parse(input);
-
-  let l1Flushed = 0;
-  let l2Flushed = 0;
-
-  if (target === 'all' || target === 'l1') {
-    l1Flushed = flushL1Cache();
-  }
-  if (target === 'all' || target === 'l2') {
-    l2Flushed = await database.dnsCache.flush();
-  }
-
+export function flushCache() {
+  const flushed = flushMemoryCache();
   resetCacheCounters();
 
-  logger.info(
-    'dns',
-    `Cache flushed (target=${target}): L1=${l1Flushed}, L2=${l2Flushed}`
-  );
+  logger.info('dns', `Cache flushed: ${flushed} entries`);
 
-  return { flushed: { l1: l1Flushed, l2: l2Flushed } };
+  return { flushed };
 }

@@ -5,7 +5,6 @@ import {
   getCacheSummary,
   flushCache,
   type CacheSummaryInput,
-  type CacheFlushInput,
 } from '../services/cacheService.js';
 //------------------------------------------------------------------------------//
 
@@ -22,7 +21,7 @@ async function cacheStatsHandler(
   _request: FastifyRequest,
   reply: FastifyReply
 ) {
-  const stats = await getCacheStatsResult();
+  const stats = getCacheStatsResult();
   return reply.send({ success: true, stats });
 }
 
@@ -42,16 +41,16 @@ async function cacheSummaryHandler(
     status: q.status as CacheSummaryInput['status'],
   };
 
-  const result = await getCacheSummary(input);
+  const result = getCacheSummary(input);
   return reply.send({ success: true, ...result });
 }
 
 // POST /api/cache/flush
 async function cacheFlushHandler(
-  request: FastifyRequest<{ Body: CacheFlushInput }>,
+  _request: FastifyRequest,
   reply: FastifyReply
 ) {
-  const result = await flushCache(request.body ?? {});
+  const result = flushCache();
   return reply.send({ success: true, ...result });
 }
 

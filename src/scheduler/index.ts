@@ -33,19 +33,13 @@ function runTask(task: ScheduledTask): void {
  * 스케줄러 시작 – 등록된 모든 작업을 주기적으로 실행
  */
 export function startScheduler(): void {
-  // DNS 캐시 만료 정리
+  // 인메모리 캐시 만료 정리
   if (env.CACHE_ENABLED) {
     registerTask(
       'purge-expired-cache',
       env.CACHE_PURGE_INTERVAL_MIN * 60_000,
       async () => {
-        const purged = await purgeExpiredCache();
-        if (purged > 0) {
-          logger.info(
-            'system',
-            `Scheduler: purged ${purged} expired cache entries`
-          );
-        }
+        purgeExpiredCache();
       }
     );
   }

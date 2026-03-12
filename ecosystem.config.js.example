@@ -1,6 +1,6 @@
 export const apps = [
   {
-    name: 'DoH-forest',
+    name: 'doh-forest',
     script: 'dist/index.js',
     instances: 1,
     autorestart: true,

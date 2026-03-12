@@ -43,7 +43,7 @@ export async function handleDnsQuery(queryBuffer: Buffer): Promise<Buffer> {
   const transactionId = query.id ?? 0;
 
   // 캐시 조회
-  const cached = await cacheLookup(domain, queryType, transactionId);
+  const cached = cacheLookup(domain, queryType, transactionId);
   if (cached) {
     logger.info('dns', `${domain} ${queryType}`, {
       result: 'cache_hit',
@@ -67,7 +67,7 @@ export async function handleDnsQuery(queryBuffer: Buffer): Promise<Buffer> {
     const response = dnsPacket.decode(result.responseBuffer);
     const answers = (response.answers ?? []) as Array<{ ttl?: number }>;
     const minTtl = extractMinTtl(answers);
-    await cacheStore(
+    cacheStore(
       domain,
       queryType,
       result.responseBuffer,

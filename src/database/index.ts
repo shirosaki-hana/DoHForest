@@ -6,7 +6,6 @@ import {
 } from './connection.js';
 import { runMigrations } from './migrations.js';
 import { LogRepository } from './repositories/log.js';
-import { DnsCacheRepository } from './repositories/dnsCache.js';
 //------------------------------------------------------------------------------//
 
 /**
@@ -15,10 +14,8 @@ import { DnsCacheRepository } from './repositories/dnsCache.js';
  */
 class Database {
   readonly logs: LogRepository;
-  readonly dnsCache: DnsCacheRepository;
   constructor() {
     this.logs = new LogRepository(db);
-    this.dnsCache = new DnsCacheRepository(db);
   }
 }
 
