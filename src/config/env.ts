@@ -13,7 +13,7 @@ const envSchema = z.object({
 
   // DNS 리스너
   DNS_HOST: z.string().default('127.0.0.1'),
-  DNS_PORT: z.coerce.number().min(1).max(65535).default(5353),
+  DNS_PORT: z.coerce.number().min(1).max(65535).default(15353),
 
   // DoH 업스트림
   DOH_PRIMARY: z.url().default('https://cloudflare-dns.com/dns-query'),

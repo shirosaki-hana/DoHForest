@@ -22,7 +22,10 @@ function parseCommaSeparated(value: unknown): string[] | undefined {
   if (typeof value !== 'string' || value === '') {
     return undefined;
   }
-  return value.split(',').map((s) => s.trim()).filter(Boolean);
+  return value
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
 }
 
 function parseIntParam(value: unknown): number | undefined {
@@ -38,7 +41,7 @@ async function getLogsHandler(
   request: FastifyRequest<{
     Querystring: Record<string, string | undefined>;
   }>,
-  reply: FastifyReply,
+  reply: FastifyReply
 ) {
   const q = request.query;
 
@@ -46,7 +49,9 @@ async function getLogsHandler(
     level: q.level as QueryLogsInput['level'],
     levels: parseCommaSeparated(q.levels) as QueryLogsInput['levels'],
     category: q.category as QueryLogsInput['category'],
-    categories: parseCommaSeparated(q.categories) as QueryLogsInput['categories'],
+    categories: parseCommaSeparated(
+      q.categories
+    ) as QueryLogsInput['categories'],
     search: q.search || undefined,
     startDate: q.startDate || undefined,
     endDate: q.endDate || undefined,
@@ -60,19 +65,13 @@ async function getLogsHandler(
 }
 
 // GET /api/logs/stats
-async function getStatsHandler(
-  _request: FastifyRequest,
-  reply: FastifyReply,
-) {
+async function getStatsHandler(_request: FastifyRequest, reply: FastifyReply) {
   const stats = await getLogStats();
   return reply.send({ success: true, stats });
 }
 
 // GET /api/logs/meta
-async function getMetaHandler(
-  _request: FastifyRequest,
-  reply: FastifyReply,
-) {
+async function getMetaHandler(_request: FastifyRequest, reply: FastifyReply) {
   const meta = getLogMeta();
   return reply.send({ success: true, ...meta });
 }
@@ -80,7 +79,7 @@ async function getMetaHandler(
 // DELETE /api/logs
 async function deleteLogsHandler(
   request: FastifyRequest<{ Body: DeleteLogsInput }>,
-  reply: FastifyReply,
+  reply: FastifyReply
 ) {
   const result = await deleteLogs(request.body);
   return reply.send({ success: true, ...result });
@@ -89,7 +88,7 @@ async function deleteLogsHandler(
 // POST /api/logs/cleanup
 async function cleanupLogsHandler(
   request: FastifyRequest<{ Body: CleanupLogsInput }>,
-  reply: FastifyReply,
+  reply: FastifyReply
 ) {
   const result = await cleanupLogs(request.body ?? {});
   return reply.send({ success: true, ...result });

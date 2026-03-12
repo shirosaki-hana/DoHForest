@@ -12,10 +12,9 @@ const logLevelEnum = z.enum(LOG_LEVELS);
 const logCategoryEnum = z.enum(LOG_CATEGORIES);
 const sortOrderEnum = z.enum(['asc', 'desc']);
 
-const isoDateString = z.string().refine(
-  (v) => !isNaN(Date.parse(v)),
-  { message: 'Invalid ISO date string' },
-);
+const isoDateString = z
+  .string()
+  .refine((v) => !isNaN(Date.parse(v)), { message: 'Invalid ISO date string' });
 
 // --- Query Logs ---
 
@@ -60,18 +59,16 @@ const deleteByIdsSchema = z.object({
   ids: z.array(z.number().int().positive()).min(1).max(1000),
 });
 
-const deleteByConditionSchema = z.object({
-  olderThan: isoDateString.optional(),
-  level: logLevelEnum.optional(),
-}).refine(
-  (v) => v.olderThan !== undefined || v.level !== undefined,
-  { message: 'At least one condition (olderThan or level) is required' },
-);
+const deleteByConditionSchema = z
+  .object({
+    olderThan: isoDateString.optional(),
+    level: logLevelEnum.optional(),
+  })
+  .refine((v) => v.olderThan !== undefined || v.level !== undefined, {
+    message: 'At least one condition (olderThan or level) is required',
+  });
 
-const deleteLogsSchema = z.union([
-  deleteByIdsSchema,
-  deleteByConditionSchema,
-]);
+const deleteLogsSchema = z.union([deleteByIdsSchema, deleteByConditionSchema]);
 
 export type DeleteLogsInput = z.input<typeof deleteLogsSchema>;
 

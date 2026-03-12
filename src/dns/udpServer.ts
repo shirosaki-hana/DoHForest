@@ -11,6 +11,7 @@ let socket: dgram.Socket | null = null;
 export function startUdpServer(host: string, port: number): Promise<void> {
   return new Promise((resolve, reject) => {
     socket = dgram.createSocket('udp4');
+    let bound = false;
 
     socket.on('message', (msg, rinfo) => {
       handleDnsQuery(msg)
@@ -34,12 +35,13 @@ export function startUdpServer(host: string, port: number): Promise<void> {
 
     socket.on('error', (err) => {
       logger.error('dns', 'UDP server error', { error: err.message });
-      if (!socket) {
+      if (!bound) {
         reject(err);
       }
     });
 
     socket.bind(port, host, () => {
+      bound = true;
       logger.info('dns', `UDP server listening on ${host}:${port}`);
       resolve();
     });
