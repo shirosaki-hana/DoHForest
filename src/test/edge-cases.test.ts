@@ -9,6 +9,7 @@ import {
   formatAnswerData,
   DNS_HOST,
   DNS_PORT,
+  type DecodedResponse,
 } from './helpers.js';
 
 describe('NXDOMAIN', () => {
@@ -190,6 +191,93 @@ describe('Concurrent queries', () => {
         getNonOptAnswers(results[i]).length,
         `${domains[i]} should have answers`
       ).toBeGreaterThan(0);
+    }
+  });
+});
+
+describe('Special domains', () => {
+  it('resolves root nameservers (. NS)', async () => {
+    const res = await queryUdp({ domain: '.', type: 'NS' });
+    expect(res.rcode).toBeDefined();
+    if (res.rcode === 'NOERROR') {
+      expect(getNonOptAnswers(res).length).toBeGreaterThan(0);
+    }
+  });
+
+  it('handles maximum-length label (63 chars)', async () => {
+    const longLabel = 'a'.repeat(63);
+    const res = await queryUdp({
+      domain: `${longLabel}.example.com`,
+      type: 'A',
+    });
+    expect(res.rcode).toBeDefined();
+  });
+
+  it('handles deep subdomain (5 levels)', async () => {
+    const res = await queryUdp({
+      domain: 'a.b.c.d.e.example.com',
+      type: 'A',
+    });
+    expect(res.rcode).toBeDefined();
+  });
+
+  it('handles IDN punycode domain', async () => {
+    const res = await queryUdp({ domain: 'xn--n3h.com', type: 'A' });
+    expect(res.rcode).toBeDefined();
+  });
+
+  it('handles single-label domain', async () => {
+    const res = await queryUdp({ domain: 'localhost', type: 'A' });
+    expect(res.rcode).toBeDefined();
+  });
+});
+
+describe('Multiple questions in query', () => {
+  it('processes query with 2 questions without crash', async () => {
+    const query = dnsPacket.encode({
+      type: 'query',
+      id: 0xab12,
+      flags: dnsPacket.RECURSION_DESIRED,
+      questions: [
+        { type: 'A', name: 'example.com' },
+        { type: 'AAAA', name: 'google.com' },
+      ],
+    });
+
+    const raw = await sendRawUdp(query);
+    expect(raw).not.toBeNull();
+    const res = dnsPacket.decode(raw!) as DecodedResponse;
+    expect(res.id).toBe(0xab12);
+    expect(['NOERROR', 'SERVFAIL', 'NXDOMAIN']).toContain(res.rcode);
+  });
+});
+
+describe('Same-domain concurrent queries', () => {
+  it('resolves 10 concurrent UDP queries for the same domain', async () => {
+    const results = await Promise.all(
+      Array.from({ length: 10 }, (_, i) =>
+        queryUdp({ domain: 'example.com', type: 'A' }, 0x3000 + i)
+      )
+    );
+
+    for (let i = 0; i < results.length; i++) {
+      expect(results[i].id).toBe(0x3000 + i);
+      expect(results[i].rcode).toBe('NOERROR');
+      expect(getNonOptAnswers(results[i]).length).toBeGreaterThan(0);
+    }
+  });
+
+  it('resolves 10 concurrent TCP queries for the same domain', async () => {
+    const results = await Promise.all(
+      Array.from({ length: 10 }, (_, i) =>
+        queryTcp({ domain: 'example.com', type: 'A' }, 0x4000 + i)
+      )
+    );
+
+    for (let i = 0; i < results.length; i++) {
+      expect(results[i].id).toBe(0x4000 + i);
+      expect(results[i].rcode).toBe('NOERROR');
+      expect(getNonOptAnswers(results[i]).length).toBeGreaterThan(0);
     }
   });
 });

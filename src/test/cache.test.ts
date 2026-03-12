@@ -79,4 +79,34 @@ describe('DNS cache', () => {
       expect(answersA).not.toEqual(answersAAAA);
     });
   });
+
+  describe('cache response consistency', () => {
+    it('cached answers are identical to the original response', async () => {
+      const tc = { domain: 'naver.com', type: 'A' as const };
+
+      const fresh = await queryUdp(tc, 0x1111);
+      const cached = await queryUdp(tc, 0x2222);
+
+      const freshAnswers = getNonOptAnswers(fresh).map(formatAnswerData).sort();
+      const cachedAnswers = getNonOptAnswers(cached)
+        .map(formatAnswerData)
+        .sort();
+
+      expect(freshAnswers.length).toBeGreaterThan(0);
+      expect(cachedAnswers).toEqual(freshAnswers);
+    });
+
+    it('cached response via TCP matches original UDP response', async () => {
+      const tc = { domain: 'naver.com', type: 'A' as const };
+
+      const viaUdp = await queryUdp(tc, 0x3333);
+      const viaTcp = await queryTcp(tc, 0x4444);
+
+      const udpAnswers = getNonOptAnswers(viaUdp).map(formatAnswerData).sort();
+      const tcpAnswers = getNonOptAnswers(viaTcp).map(formatAnswerData).sort();
+
+      expect(udpAnswers.length).toBeGreaterThan(0);
+      expect(tcpAnswers).toEqual(udpAnswers);
+    });
+  });
 });
