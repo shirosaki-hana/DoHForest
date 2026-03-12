@@ -63,19 +63,21 @@ function getSqliteDb(): DatabaseSync {
     // PRAGMA 설정
     const pragmas = {
       journalMode: 'WAL',
-      synchronous: 'FULL',
+      synchronous: 'NORMAL',
       foreignKeys: true,
       busyTimeout: 5000,
+      cacheSize: -8000,
+      mmapSize: 67108864,
+      tempStore: 'MEMORY',
     };
 
-    // WAL 모드 활성화
     sqliteDb.exec('PRAGMA journal_mode = WAL');
-    // 동기화 레벨 FULL
-    sqliteDb.exec('PRAGMA synchronous = FULL');
-    // 외래 키 제약 조건 활성화
+    sqliteDb.exec('PRAGMA synchronous = NORMAL');
     sqliteDb.exec('PRAGMA foreign_keys = ON');
-    // 잠금 대기 시간 설정 (ms)
     sqliteDb.exec('PRAGMA busy_timeout = 5000');
+    sqliteDb.exec('PRAGMA cache_size = -8000');
+    sqliteDb.exec('PRAGMA mmap_size = 67108864');
+    sqliteDb.exec('PRAGMA temp_store = MEMORY');
 
     logger.info('database', 'SQLite connection initialized', {
       dbPath,

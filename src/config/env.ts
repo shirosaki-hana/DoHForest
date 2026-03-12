@@ -27,6 +27,7 @@ const envSchema = z.object({
     .transform((v) => v === 'true'),
   CACHE_MIN_TTL: z.coerce.number().min(0).default(60),
   CACHE_MAX_TTL: z.coerce.number().min(0).default(86400),
+  CACHE_MAX_ITEMS: z.coerce.number().min(100).max(100_000).default(5000),
 
   // 스케줄러
   CACHE_PURGE_INTERVAL_MIN: z.coerce.number().min(1).default(5),

@@ -1,5 +1,6 @@
-import { eq, and, lte, count } from 'drizzle-orm';
+import { eq, and, lte, gt, count } from 'drizzle-orm';
 import type { Database } from '../connection.js';
+import { queryRawSql } from '../connection.js';
 import { dnsCache } from '../schema.js';
 //------------------------------------------------------------------------------//
 
@@ -22,12 +23,16 @@ export class DnsCacheRepository {
       })
       .from(dnsCache)
       .where(
-        and(eq(dnsCache.domain, domain), eq(dnsCache.queryType, queryType))
+        and(
+          eq(dnsCache.domain, domain),
+          eq(dnsCache.queryType, queryType),
+          gt(dnsCache.expiresAt, now)
+        )
       )
       .limit(1);
 
     const row = rows[0];
-    if (!row || row.expiresAt <= now) {
+    if (!row) {
       return null;
     }
 
@@ -79,34 +84,18 @@ export class DnsCacheRepository {
    */
   async purgeExpired(): Promise<number> {
     const now = Date.now();
-
-    const [countResult] = await this.db
-      .select({ count: count() })
-      .from(dnsCache)
-      .where(lte(dnsCache.expiresAt, now));
-    const deleteCount = countResult?.count ?? 0;
-
-    if (deleteCount > 0) {
-      await this.db.delete(dnsCache).where(lte(dnsCache.expiresAt, now));
-    }
-
-    return deleteCount;
+    await this.db.delete(dnsCache).where(lte(dnsCache.expiresAt, now));
+    return queryRawSql<{ changes: number }>('SELECT changes() as changes')
+      ?.changes ?? 0;
   }
 
   /**
    * 전체 캐시 삭제
    */
   async flush(): Promise<number> {
-    const [countResult] = await this.db
-      .select({ count: count() })
-      .from(dnsCache);
-    const total = countResult?.count ?? 0;
-
-    if (total > 0) {
-      await this.db.delete(dnsCache);
-    }
-
-    return total;
+    await this.db.delete(dnsCache);
+    return queryRawSql<{ changes: number }>('SELECT changes() as changes')
+      ?.changes ?? 0;
   }
 
   /**
