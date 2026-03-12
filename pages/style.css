@@ -1,179 +1,479 @@
-* {
+*,
+*::before,
+*::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
+:root {
+  --bg: #f7f8fa;
+  --surface: #ffffff;
+  --border: #e2e5ea;
+  --text: #1a1d23;
+  --text-dim: #6b7280;
+  --accent: #3b82f6;
+  --accent-hover: #2563eb;
+  --green: #22c55e;
+  --yellow: #eab308;
+  --red: #ef4444;
+  --orange: #f97316;
+  --radius: 8px;
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
-  background-color: #f5f5f5;
-  color: #333;
-  line-height: 1.6;
-  padding: 20px;
-  max-width: 600px;
-  margin: 0 auto;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  min-height: 100vh;
 }
 
-h1 {
-  text-align: center;
-  margin-bottom: 30px;
-  color: #2c3e50;
-  font-size: 24px;
-  font-weight: 600;
+/* ── Header ─────────────────────────────────────────── */
+
+header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  height: 56px;
+  box-shadow: var(--shadow);
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
-#uploadArea {
-  background-color: #fff;
-  border: 2px dashed #3498db;
-  border-radius: 8px;
-  padding: 40px 20px;
-  text-align: center;
-  cursor: pointer;
-  transition: border-color 0.2s;
-  margin-bottom: 20px;
+header h1 {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
 }
 
-#uploadArea:hover {
-  border-color: #2980b9;
-  background-color: #f8f9fa;
+nav {
+  display: flex;
+  gap: 4px;
 }
 
-#uploadArea.dragover {
-  border-color: #27ae60;
-  background-color: #e8f5e9;
-}
-
-#uploadArea p {
-  margin: 5px 0;
-  color: #555;
-}
-
-#uploadArea small {
-  color: #888;
-}
-
-#fileInput {
-  display: block;
-  width: 100%;
-  padding: 10px;
-  margin-bottom: 15px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  background-color: #fff;
-  cursor: pointer;
-}
-
-#fileInput::-webkit-file-upload-button {
+.tab {
+  background: none;
+  border: none;
   padding: 8px 16px;
-  background-color: #3498db;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  margin-right: 10px;
-}
-
-#fileInput::-webkit-file-upload-button:hover {
-  background-color: #2980b9;
-}
-
-#fileInfo {
-  background-color: #fff;
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
-  padding: 15px;
-  margin-bottom: 15px;
-  display: none;
-}
-
-#fileInfo p {
-  margin: 5px 0;
-  color: #555;
   font-size: 14px;
+  font-weight: 500;
+  color: var(--text-dim);
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.15s;
 }
 
-#uploadBtn {
-  width: 100%;
-  padding: 12px;
-  background-color: #27ae60;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  margin-bottom: 15px;
+.tab:hover {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.tab.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* ── Main ───────────────────────────────────────────── */
+
+main {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.panel {
   display: none;
 }
 
-#uploadBtn:hover {
-  background-color: #229954;
+.panel.active {
+  display: block;
 }
 
-#uploadBtn:active {
-  background-color: #1e8449;
+.hidden {
+  display: none !important;
 }
 
-#uploadBtn:disabled {
-  background-color: #95a5a6;
+/* ── Buttons ────────────────────────────────────────── */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 18px;
+  font-size: 14px;
+  font-weight: 500;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.btn:hover {
+  border-color: #c5c9d0;
+  background: #f0f1f3;
+}
+
+.btn:disabled {
+  opacity: 0.45;
   cursor: not-allowed;
 }
 
-#progressBar {
-  width: 100%;
-  height: 24px;
-  background-color: #e0e0e0;
-  border-radius: 12px;
-  overflow: hidden;
-  margin-bottom: 15px;
-  display: none;
+.btn.primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
 }
 
-#progressFill {
-  height: 100%;
-  background-color: #3498db;
-  width: 0%;
-  transition: width 0.2s;
-  border-radius: 12px;
+.btn.primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
 }
 
-#message {
-  padding: 12px;
-  border-radius: 6px;
-  text-align: center;
+.btn.small {
+  padding: 5px 12px;
+  font-size: 13px;
+}
+
+/* ── Forms ──────────────────────────────────────────── */
+
+.form-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.form-row.align-center {
+  align-items: center;
+  justify-content: space-between;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.form-group.grow {
+  flex: 1;
+}
+
+label {
+  font-size: 13px;
   font-weight: 500;
+  color: var(--text-dim);
+}
+
+input[type='text'],
+input[type='search'],
+select {
+  padding: 8px 12px;
+  font-size: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+input:focus,
+select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-dim);
+  cursor: pointer;
+  user-select: none;
+}
+
+.toggle input[type='checkbox'] {
+  accent-color: var(--accent);
+  width: 15px;
+  height: 15px;
+}
+
+/* ── DNS Result ─────────────────────────────────────── */
+
+.summary-bar {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin: 16px 0 12px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.summary-bar strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+#dnsAnswers,
+#logTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+#dnsAnswers th,
+#logTable th {
+  text-align: left;
+  padding: 10px 12px;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+
+#dnsAnswers td,
+#logTable td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+  word-break: break-all;
+}
+
+#dnsAnswers tbody tr:last-child td,
+#logTable tbody tr:last-child td {
+  border-bottom: none;
+}
+
+#dnsAnswers tbody tr:hover,
+#logTable tbody tr:hover {
+  background: #f9fafb;
+}
+
+/* ── Log Monitor ────────────────────────────────────── */
+
+.stats-bar {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.stat-card {
+  flex: 1;
+  min-width: 100px;
+  padding: 12px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.stat-card .stat-value {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.stat-card .stat-label {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-top: 2px;
+}
+
+.log-toolbar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.log-toolbar select,
+.log-toolbar input[type='search'] {
+  height: 34px;
+  font-size: 13px;
+}
+
+.log-toolbar input[type='search'] {
+  flex: 1;
+  min-width: 120px;
+}
+
+.log-table-wrap {
+  overflow-x: auto;
+  margin-bottom: 12px;
+}
+
+#logTable .col-time {
+  width: 160px;
+  white-space: nowrap;
+}
+
+#logTable .col-level {
+  width: 70px;
+}
+
+#logTable .col-cat {
+  width: 90px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.badge.ERROR {
+  background: #fef2f2;
+  color: var(--red);
+}
+
+.badge.WARN {
+  background: #fefce8;
+  color: #a16207;
+}
+
+.badge.INFO {
+  background: #eff6ff;
+  color: var(--accent);
+}
+
+.badge.DEBUG {
+  background: #f0fdf4;
+  color: #16a34a;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+/* ── Log meta (expandable row) ──────────────────────── */
+
+#logTable tr.has-meta {
+  cursor: pointer;
+}
+
+#logTable tr.has-meta:hover td {
+  background: #f0f4ff;
+}
+
+.meta-hint {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: #e8ecf1;
+  color: var(--text-dim);
+  vertical-align: middle;
+  margin-left: 4px;
+}
+
+.meta-row td {
+  padding: 0 12px !important;
+  background: #f9fafb;
+}
+
+.meta-row.hidden {
   display: none;
 }
 
-#message[data-type='success'] {
-  background-color: #d4edda;
-  color: #155724;
-  border: 1px solid #c3e6cb;
+.log-meta {
+  margin: 8px 0;
+  padding: 10px 14px;
+  font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  background: #1e1e2e;
+  color: #cdd6f4;
+  border-radius: 6px;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
 }
 
-#message[data-type='error'] {
-  background-color: #f8d7da;
-  color: #721c24;
-  border: 1px solid #f5c6cb;
+.empty-state {
+  text-align: center;
+  padding: 40px 16px;
+  color: var(--text-dim);
+  font-size: 14px;
 }
 
-#message[data-type='info'] {
-  background-color: #d1ecf1;
-  color: #0c5460;
-  border: 1px solid #bee5eb;
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  vertical-align: middle;
+  margin-right: 6px;
 }
 
-@media (max-width: 480px) {
-  body {
-    padding: 15px;
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ── Responsive ─────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  header {
+    flex-direction: column;
+    height: auto;
+    padding: 12px 16px;
+    gap: 8px;
   }
 
-  h1 {
-    font-size: 20px;
-    margin-bottom: 20px;
+  main {
+    padding: 16px;
   }
 
-  #uploadArea {
-    padding: 30px 15px;
+  .form-row {
+    flex-direction: column;
+  }
+
+  .log-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .stats-bar {
+    flex-direction: column;
   }
 }

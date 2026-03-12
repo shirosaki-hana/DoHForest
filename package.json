@@ -17,6 +17,7 @@
     "typecheck": "tsgo --noEmit --pretty",
     "build": "pnpm clean && pnpm run typecheck && node ./esbuild.config.mjs",
     "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "clean": "rimraf dist",
     "format": "prettier --write .",
     "format:check": "prettier --check ."

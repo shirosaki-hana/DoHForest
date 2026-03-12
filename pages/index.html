@@ -1,33 +1,113 @@
 <!doctype html>
-<html lang="en">
+<html lang="ko">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>File Upload</title>
+    <title>DoH Forest</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <h1>File Upload</h1>
+    <header>
+      <h1>DoH Forest</h1>
+      <nav>
+        <button class="tab active" data-tab="dns">DNS Lookup</button>
+        <button class="tab" data-tab="logs">Log Monitor</button>
+      </nav>
+    </header>
 
-    <div id="uploadArea">
-      <p>Click or drag files here to upload</p>
-      <p><small>All file types supported</small></p>
-    </div>
+    <main>
+      <!-- DNS Lookup -->
+      <section id="dns" class="panel active">
+        <form id="dnsForm">
+          <div class="form-row">
+            <div class="form-group grow">
+              <label for="dnsDomain">Domain</label>
+              <input
+                type="text"
+                id="dnsDomain"
+                placeholder="example.com"
+                required
+                autocomplete="off"
+                spellcheck="false"
+              />
+            </div>
+            <div class="form-group">
+              <label for="dnsType">Type</label>
+              <select id="dnsType"></select>
+            </div>
+          </div>
+          <div class="form-row align-center">
+            <label class="toggle">
+              <input type="checkbox" id="dnsBypass" checked />
+              <span>Bypass cache</span>
+            </label>
+            <button type="submit" class="btn primary" id="dnsSubmit">
+              Lookup
+            </button>
+          </div>
+        </form>
 
-    <input type="file" id="fileInput" multiple />
+        <div id="dnsResult" class="hidden">
+          <div id="dnsSummary" class="summary-bar"></div>
+          <table id="dnsAnswers">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>TTL</th>
+                <th>Data</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
 
-    <div id="fileInfo">
-      <p id="fileName"></p>
-      <p id="fileSize"></p>
-    </div>
+      <!-- Log Monitor -->
+      <section id="logs" class="panel">
+        <div id="logStats" class="stats-bar"></div>
 
-    <button id="uploadBtn">Upload</button>
+        <div class="log-toolbar">
+          <select id="logLevel">
+            <option value="">All Levels</option>
+          </select>
+          <select id="logCategory">
+            <option value="">All Categories</option>
+          </select>
+          <input
+            type="search"
+            id="logSearch"
+            placeholder="Search..."
+            autocomplete="off"
+          />
+          <label class="toggle">
+            <input type="checkbox" id="logAutoRefresh" checked />
+            <span>Auto</span>
+          </label>
+          <button class="btn small" id="logRefresh">Refresh</button>
+        </div>
 
-    <div id="progressBar">
-      <div id="progressFill"></div>
-    </div>
+        <div class="log-table-wrap">
+          <table id="logTable">
+            <thead>
+              <tr>
+                <th class="col-time">Time</th>
+                <th class="col-level">Level</th>
+                <th class="col-cat">Category</th>
+                <th>Message</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
 
-    <div id="message"></div>
+        <div class="pagination">
+          <button class="btn small" id="logPrev" disabled>&larr; Prev</button>
+          <span id="logPageInfo">-</span>
+          <button class="btn small" id="logNext" disabled>Next &rarr;</button>
+        </div>
+      </section>
+    </main>
 
     <script src="app.js"></script>
   </body>
