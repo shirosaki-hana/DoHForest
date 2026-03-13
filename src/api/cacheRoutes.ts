@@ -43,8 +43,7 @@ async function cacheFlushHandler(_request: FastifyRequest, reply: FastifyReply) 
   return reply.send({ success: true, ...result });
 }
 
-// --- Route registration ---
-
+// Route registration
 export async function registerCacheRoutes(app: FastifyInstance): Promise<void> {
   app.addHook('onError', async (_request, reply, error) => {
     if (error instanceof ZodError) {

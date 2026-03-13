@@ -6,11 +6,9 @@ import { LOG_LEVELS, LOG_CATEGORIES, type GetLogsRequest } from '../logger/types
 const logLevelEnum = z.enum(LOG_LEVELS);
 const logCategoryEnum = z.enum(LOG_CATEGORIES);
 const sortOrderEnum = z.enum(['asc', 'desc']);
-
 const isoDateString = z.string().refine((v) => !isNaN(Date.parse(v)), { message: 'Invalid ISO date string' });
 
-// --- Query Logs ---
-
+// Query Logs
 const queryLogsSchema = z.object({
   level: logLevelEnum.optional(),
   levels: z.array(logLevelEnum).optional(),
@@ -31,14 +29,12 @@ export function queryLogs(input: QueryLogsInput) {
   return logStore.query(params);
 }
 
-// --- Stats ---
-
+// Stats
 export function getLogStats() {
   return logStore.getStats();
 }
 
-// --- Meta (for UI filter dropdowns) ---
-
+// Meta (for UI filter dropdowns)
 export function getLogMeta() {
   return {
     levels: LOG_LEVELS as readonly string[],

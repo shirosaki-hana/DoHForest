@@ -1,5 +1,5 @@
-import { z } from 'zod';
 import dnsPacket from 'dns-packet';
+import { z } from 'zod';
 import { resolveViaDoH } from '../doh/client.js';
 import { handleDnsQuery } from '../dns/handler.js';
 //------------------------------------------------------------------------------//

@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { queryUdp, queryTcp, getNonOptAnswers, type TestCase } from './helpers.js';
+//------------------------------------------------------------------------------//
 
 describe('Response flags', () => {
   it('UDP — QR=1, RD=1, RA=1 in response', async () => {

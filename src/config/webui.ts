@@ -1,5 +1,6 @@
 import path from 'path';
 import { projectRoot } from '../config/dir.js';
+//------------------------------------------------------------------------------//
 
 export const fastifyConfig = {
   bodyLimit: 64 * 1024,

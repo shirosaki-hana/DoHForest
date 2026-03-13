@@ -1,6 +1,7 @@
 import dgram from 'node:dgram';
 import net from 'node:net';
 import dnsPacket, { type Answer, type DecodedPacket, type Question } from 'dns-packet';
+//------------------------------------------------------------------------------//
 
 export type DecodedResponse = DecodedPacket & { rcode?: string };
 
@@ -78,7 +79,9 @@ export function queryTcp(testCase: TestCase, id?: number): Promise<DecodedRespon
     client.on('data', (data: Buffer | string) => {
       chunks.push(Buffer.isBuffer(data) ? data : Buffer.from(data));
       const accumulated = Buffer.concat(chunks);
-      if (accumulated.length < 2) return;
+      if (accumulated.length < 2) {
+        return;
+      }
       const expectedLen = accumulated.readUInt16BE(0);
       if (accumulated.length >= expectedLen + 2) {
         clearTimeout(timer);
@@ -151,7 +154,9 @@ export function sendTcpPipelined(messages: Buffer[], expectedResponses: number):
 
       while (buffer.length >= 2) {
         const msgLen = buffer.readUInt16BE(0);
-        if (buffer.length < 2 + msgLen) break;
+        if (buffer.length < 2 + msgLen) {
+          break;
+        }
 
         const dnsMsg = buffer.subarray(2, 2 + msgLen);
         buffer = buffer.subarray(2 + msgLen);
@@ -211,10 +216,18 @@ export function sendRawTcp(buf: Buffer, timeoutMs = 2000): Promise<Buffer | null
 
 export function formatAnswerData(ans: Exclude<Answer, dnsPacket.OptAnswer>): string {
   const { data } = ans;
-  if (typeof data === 'string') return data;
-  if (Buffer.isBuffer(data)) return data.toString('hex');
-  if (Array.isArray(data)) return data.map((b) => (Buffer.isBuffer(b) ? b.toString('utf-8') : String(b))).join(' ');
-  if (data && typeof data === 'object') return JSON.stringify(data);
+  if (typeof data === 'string') {
+    return data;
+  }
+  if (Buffer.isBuffer(data)) {
+    return data.toString('hex');
+  }
+  if (Array.isArray(data)) {
+    return data.map((b) => (Buffer.isBuffer(b) ? b.toString('utf-8') : String(b))).join(' ');
+  }
+  if (data && typeof data === 'object') {
+    return JSON.stringify(data);
+  }
   return String(data);
 }
 

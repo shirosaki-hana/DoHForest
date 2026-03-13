@@ -63,8 +63,7 @@ async function getMetaHandler(_request: FastifyRequest, reply: FastifyReply) {
   return reply.send({ success: true, ...meta });
 }
 
-// --- Route registration ---
-
+// Route registration
 export async function registerLogRoutes(app: FastifyInstance): Promise<void> {
   app.addHook('onError', async (_request, reply, error) => {
     if (error instanceof ZodError) {

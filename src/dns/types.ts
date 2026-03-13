@@ -1,5 +1,6 @@
 import type dgram from 'node:dgram';
 import type net from 'node:net';
+//------------------------------------------------------------------------------//
 
 export interface DnsServer {
   start(): Promise<void>;

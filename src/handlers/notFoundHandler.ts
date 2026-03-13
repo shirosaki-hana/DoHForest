@@ -1,4 +1,5 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
+//------------------------------------------------------------------------------//
 
 /**
  * SPA fallback 및 404 핸들러

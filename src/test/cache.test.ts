@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { queryUdp, queryTcp, getNonOptAnswers, formatAnswerData } from './helpers.js';
+//------------------------------------------------------------------------------//
 
 describe('DNS cache', () => {
   it('2nd query should be faster than 1st (cache hit)', async () => {

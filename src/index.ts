@@ -1,6 +1,5 @@
 import Fastify from 'fastify';
 import staticFiles from '@fastify/static';
-
 import { env } from './config/env.js';
 import { fastifyConfig, staticFilesConfig } from './config/webui.js';
 import { errorHandler } from './handlers/errorHandler.js';
@@ -29,7 +28,7 @@ function onTerminationSignal(): Promise<string> {
 }
 
 async function main() {
-  // ── Startup ────────────────────────────────────────────────────────────────
+  // Startup
   const webui = await createWebUI();
   await webui.listen({ port: env.WEBUI_PORT, host: env.WEBUI_HOST });
   console_log(`WebUI is running on http://${env.WEBUI_HOST}:${env.WEBUI_PORT}`);
@@ -37,10 +36,10 @@ async function main() {
   await startDnsServer();
   startScheduler();
 
-  // ── Await termination ──────────────────────────────────────────────────────
+  // Await termination
   const signal = await onTerminationSignal();
 
-  // ── Shutdown ───────────────────────────────────────────────────────────────
+  // Shutdown
   console_log(`Graceful shutdown initiated (signal: ${signal})`);
   try {
     stopScheduler();

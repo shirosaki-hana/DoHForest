@@ -1,7 +1,7 @@
-import dgram from 'node:dgram';
 import { describe, it, expect } from 'vitest';
 import dnsPacket from 'dns-packet';
 import { queryUdp, queryTcp, sendRawUdp, getNonOptAnswers, formatAnswerData, DNS_HOST, DNS_PORT, type DecodedResponse } from './helpers.js';
+//------------------------------------------------------------------------------//
 
 describe('NXDOMAIN', () => {
   const tc = {
@@ -104,7 +104,9 @@ describe('SERVFAIL — empty/invalid questions', () => {
       client.on('data', (data: Buffer | string) => {
         chunks.push(Buffer.isBuffer(data) ? data : Buffer.from(data));
         const acc = Buffer.concat(chunks);
-        if (acc.length < 2) return;
+        if (acc.length < 2) {
+          return;
+        }
         const len = acc.readUInt16BE(0);
         if (acc.length >= 2 + len) {
           clearTimeout(timer);

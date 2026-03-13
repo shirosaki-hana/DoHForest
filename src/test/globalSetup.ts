@@ -1,5 +1,6 @@
 import { startDnsServer, stopDnsServer } from '../dns/server.js';
 import { destroyUpstreamPool } from '../doh/providers.js';
+//------------------------------------------------------------------------------//
 
 export async function setup() {
   await startDnsServer();

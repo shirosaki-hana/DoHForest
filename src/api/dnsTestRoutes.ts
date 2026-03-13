@@ -17,8 +17,7 @@ async function dnsMetaHandler(_request: FastifyRequest, reply: FastifyReply) {
   });
 }
 
-// --- Route registration ---
-
+// Route registration
 export async function registerDnsTestRoutes(app: FastifyInstance): Promise<void> {
   app.addHook('onError', async (_request, reply, error) => {
     if (error instanceof ZodError) {

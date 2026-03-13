@@ -9,14 +9,12 @@ import {
 import { logger } from '../logger/index.js';
 //------------------------------------------------------------------------------//
 
-// --- Stats ---
-
+// Stats
 export function getCacheStatsResult(): CacheStatsResult {
   return getCacheStats();
 }
 
-// --- Summary ---
-
+// Summary
 const cacheSummarySchema = z.object({
   page: z.number().int().min(1).default(1),
   limit: z.number().int().min(1).max(200).default(50),
@@ -40,8 +38,7 @@ export function getCacheSummary(input: CacheSummaryInput) {
   };
 }
 
-// --- Flush ---
-
+// Flush
 export function flushCache() {
   const flushed = flushMemoryCache();
   resetCacheCounters();

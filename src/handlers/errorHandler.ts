@@ -1,5 +1,6 @@
 import type { FastifyError, FastifyRequest, FastifyReply } from 'fastify';
 import { logger } from '../logger/index.js';
+//------------------------------------------------------------------------------//
 
 /**
  * 전역 에러 핸들러

@@ -1,7 +1,8 @@
-import { describe, it, expect } from 'vitest';
 import dnsPacket from 'dns-packet';
+import { describe, it, expect } from 'vitest';
 import { buildServFailResponse } from '../doh/client.js';
 import type { DecodedResponse } from './helpers.js';
+//------------------------------------------------------------------------------//
 
 describe('buildServFailResponse', () => {
   it('returns SERVFAIL with matching transaction ID', () => {
