@@ -12,59 +12,49 @@ import { destroyUpstreamPool } from './doh/providers.js';
 import { startScheduler, stopScheduler } from './scheduler/index.js';
 //------------------------------------------------------------------------------//
 
-// Fastify 서버 생성
-async function createFastifyApp() {
-  const fastify = Fastify(fastifyConfig);
-  await fastify.register(staticFiles, staticFilesConfig);
-  await registerApiRoutes(fastify);
-  fastify.setNotFoundHandler(notFoundHandler);
-  fastify.setErrorHandler(errorHandler);
-  return fastify;
+async function createWebUI() {
+  const app = Fastify(fastifyConfig);
+  await app.register(staticFiles, staticFilesConfig);
+  await registerApiRoutes(app);
+  app.setNotFoundHandler(notFoundHandler);
+  app.setErrorHandler(errorHandler);
+  return app;
 }
 
-// 서버 시작 함수
-async function startServer(host: string, port: number) {
-  const fastify = await createFastifyApp();
-  await fastify.listen({ port, host });
+function onTerminationSignal(): Promise<string> {
+  return new Promise((resolve) => {
+    process.once('SIGINT', () => resolve('SIGINT'));
+    process.once('SIGTERM', () => resolve('SIGTERM'));
+  });
+}
 
-  console_log(`WebUI is running on http://${host}:${port}`);
+async function main() {
+  // ── Startup ────────────────────────────────────────────────────────────────
+  const webui = await createWebUI();
+  await webui.listen({ port: env.WEBUI_PORT, host: env.WEBUI_HOST });
+  console_log(`WebUI is running on http://${env.WEBUI_HOST}:${env.WEBUI_PORT}`);
 
   await startDnsServer();
   startScheduler();
 
-  return fastify;
-}
+  // ── Await termination ──────────────────────────────────────────────────────
+  const signal = await onTerminationSignal();
 
-let isShuttingDown = false;
-
-async function gracefulShutdown(fastify: Awaited<ReturnType<typeof createFastifyApp>>, signal: string) {
-  if (isShuttingDown) {
-    return;
-  }
-  isShuttingDown = true;
+  // ── Shutdown ───────────────────────────────────────────────────────────────
   console_log(`Graceful shutdown initiated (signal: ${signal})`);
   try {
     stopScheduler();
     destroyUpstreamPool();
     await stopDnsServer();
-    await fastify.close();
+    await webui.close();
     console_log('Graceful shutdown completed');
-    process.exitCode = 0;
   } catch (error) {
     console_error('Graceful shutdown failed', error);
     process.exitCode = 1;
   }
 }
 
-async function main() {
-  try {
-    const fastify = await startServer(env.WEBUI_HOST, env.WEBUI_PORT);
-    process.on('SIGINT', () => gracefulShutdown(fastify, 'SIGINT').catch(console_error));
-    process.on('SIGTERM', () => gracefulShutdown(fastify, 'SIGTERM').catch(console_error));
-  } catch (error) {
-    console_error(error);
-    process.exitCode = 1;
-  }
-}
-
-main();
+main().catch((error) => {
+  console_error(error);
+  process.exitCode = 1;
+});
