@@ -1,6 +1,5 @@
 import { LRUCache } from 'lru-cache';
 import { env } from '../config/env.js';
-import { logger } from '../logger/index.js';
 //------------------------------------------------------------------------------//
 
 interface MemoryCacheEntry {
@@ -96,6 +95,10 @@ export function cacheStore(domain: string, queryType: string, responseBuffer: Bu
   }
 
   const ttl = clampTtl(rawTtl);
+  if (ttl <= 0) {
+    return;
+  }
+
   const key = cacheKey(domain.toLowerCase(), queryType);
   const ttlMs = ttl * 1000;
   const expiresAt = Date.now() + ttlMs;
@@ -116,10 +119,15 @@ function clampTtl(ttl: number): number {
 export function purgeExpiredCache(): number {
   const before = memoryCache.size;
   memoryCache.purgeStale();
-  const purged = before - memoryCache.size;
-  if (purged > 0) {
-    logger.info('dns', `Purged ${purged} expired cache entries`);
+
+  const now = Date.now();
+  for (const [key, entry] of memoryCache.entries()) {
+    if (entry.expiresAt <= now) {
+      memoryCache.delete(key);
+    }
   }
+
+  const purged = before - memoryCache.size;
   return purged;
 }
 
