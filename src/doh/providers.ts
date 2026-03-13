@@ -1,4 +1,5 @@
 import { env } from '../config/env.js';
+import * as h2pool from './h2pool.js';
 import type { DoHProvider, DoHQueryResult } from './types.js';
 //------------------------------------------------------------------------------//
 
@@ -36,29 +37,16 @@ export async function queryUpstream(dnsWireBuffer: Buffer): Promise<DoHQueryResu
 }
 
 /**
- * 개별 프로바이더에 DoH POST 질의 (RFC 8484)
+ * 개별 프로바이더에 DoH POST 질의 (RFC 8484, HTTP/2)
  */
 async function queryProvider(provider: DoHProvider, dnsWireBuffer: Buffer): Promise<DoHQueryResult | null> {
-  try {
-    const response = await fetch(provider.url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/dns-message',
-        Accept: 'application/dns-message',
-      },
-      body: dnsWireBuffer,
-      signal: AbortSignal.timeout(env.DOH_TIMEOUT),
-    });
+  const responseBuffer = await h2pool.request(provider.url, dnsWireBuffer, env.DOH_TIMEOUT);
+  return responseBuffer ? { responseBuffer, provider } : null;
+}
 
-    if (!response.ok) {
-      return null;
-    }
-
-    const arrayBuffer = await response.arrayBuffer();
-    const responseBuffer = Buffer.from(arrayBuffer);
-
-    return { responseBuffer, provider };
-  } catch {
-    return null;
-  }
+/**
+ * HTTP/2 세션 풀 종료 (graceful shutdown용)
+ */
+export function destroyUpstreamPool(): void {
+  h2pool.destroy();
 }

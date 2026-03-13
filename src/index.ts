@@ -8,6 +8,7 @@ import { notFoundHandler } from './handlers/notFoundHandler.js';
 import { registerApiRoutes } from './api/index.js';
 import { console_error, console_log } from './logger/console.js';
 import { startDnsServer, stopDnsServer } from './dns/server.js';
+import { destroyUpstreamPool } from './doh/providers.js';
 import { startScheduler, stopScheduler } from './scheduler/index.js';
 //------------------------------------------------------------------------------//
 
@@ -44,6 +45,7 @@ async function gracefulShutdown(fastify: Awaited<ReturnType<typeof createFastify
   console_log(`Graceful shutdown initiated (signal: ${signal})`);
   try {
     stopScheduler();
+    destroyUpstreamPool();
     await stopDnsServer();
     await fastify.close();
     console_log('Graceful shutdown completed');
